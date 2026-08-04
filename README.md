@@ -55,17 +55,21 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 
 ## 3. Instalar dependencias y crear el schema
 
+**Opción A — con Node.js** (lee el `.env` automáticamente):
+
 ```bash
 npm install
 npm run init:db           # solo crea el schema
 npm run init:db -- --seed # además inserta 4 entradas de ejemplo
 ```
 
-Con la CLI de Netlify (lee las vars del dashboard):
+**Opción B — SQL puro** (pegar en el dashboard de Turso o por CLI):
 
 ```bash
-netlify env:exec -- node scripts/init-db.js --seed
+turso db shell tu-db < scripts/seed.sql
 ```
+
+El script `scripts/seed.sql` es idempotente: crea la tabla si no existe y reemplaza las 4 entradas seed si ya estaban. Tiene contenido completo para las 4 entradas (~1500 caracteres cada una), no solo títulos.
 
 ## 4. Desarrollo local
 
