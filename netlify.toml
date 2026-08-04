@@ -26,6 +26,20 @@
   [headers.values]
     Cache-Control = "no-store"
 
+# =============================================================================
+# Blog dinámico: el contenido SIEMPRE se sirve desde la DB.
+# Mantenemos las URLs limpias (/blog/post/<slug>/) pero el servidor
+# reescribe internamente a blog/post.html?slug=<slug> para que la página
+# dinámica (blog.js) renderice el post en cada petición. Así los cambios
+# del backoffice son visibles sin esperar a un `npm run build`.
+# =============================================================================
+[[redirects]]
+  from = "/blog/post/:slug"
+  to = "/blog/post"
+  status = 200
+  query = {slug = ":slug"}
+  force = true
+
 # Cinturón y tirantes: aunque el build ya excluye estos archivos,
 # bloqueamos cualquier ruta que intente acceder a ficheros sensibles
 # (.env, package.json, lib/, scripts/, node_modules/, git, etc.).

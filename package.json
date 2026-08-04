@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.js",
+    "render:posts": "node scripts/render-posts.js",
     "dev": "netlify dev",
     "dev:simple": "npx --yes http-server -p 8889 -c-1 --cors",
     "init:db": "node scripts/init-db.js",

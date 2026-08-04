@@ -1,4 +1,10 @@
-import { ensureSchema, getDb, rowToPostPublic } from "../../lib/db.js";
+import {
+  ensureSchema,
+  getDb,
+  rowToPostPublic,
+  fetchCategoryById,
+  fetchTagsForPost,
+} from "../../lib/db.js";
 import { json, methodNotAllowed } from "../../lib/auth.js";
 
 export async function handler(event) {
@@ -21,7 +27,12 @@ export async function handler(event) {
     });
     const row = result.rows[0];
     if (!row) return json(404, { error: "Entrada no encontrada" });
-    return json(200, { post: rowToPostPublic(row) });
+
+    const post = rowToPostPublic(row);
+    post.category = await fetchCategoryById(row.category_id);
+    post.tags = await fetchTagsForPost(row.id);
+
+    return json(200, { post });
   } catch (err) {
     console.error("posts-get error:", err);
     return json(500, { error: "No se pudo cargar la entrada" });

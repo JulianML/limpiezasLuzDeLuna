@@ -2,6 +2,91 @@
 (() => {
   document.documentElement.classList.add('js-ready');
 
+  // Selector de idioma (dropdown) en el header, construido a partir del footer
+  const headerInner = document.querySelector('.site-header__inner');
+  const footerSwitch = document.querySelector('footer .lang-switch');
+  if (headerInner && footerSwitch) {
+    const links = Array.from(footerSwitch.querySelectorAll('a'));
+    const languages = links.map(a => ({
+      href: a.getAttribute('href'),
+      flag: a.querySelector('img').getAttribute('src'),
+      label: a.getAttribute('aria-label'),
+      isCurrent: a.classList.contains('is-current'),
+    }));
+    const current = languages.find(l => l.isCurrent) || languages[0];
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'lang-dropdown';
+    dropdown.setAttribute('aria-label', footerSwitch.getAttribute('aria-label') || 'Language selector');
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'lang-dropdown__toggle';
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-haspopup', 'true');
+    toggle.setAttribute('aria-label', current.label);
+
+    const toggleFlag = document.createElement('img');
+    toggleFlag.src = current.flag;
+    toggleFlag.alt = current.label;
+    toggle.appendChild(toggleFlag);
+
+    const caret = document.createElement('span');
+    caret.className = 'lang-dropdown__caret';
+    caret.setAttribute('aria-hidden', 'true');
+    toggle.appendChild(caret);
+
+    const menu = document.createElement('ul');
+    menu.className = 'lang-dropdown__menu';
+    menu.setAttribute('role', 'menu');
+
+    languages.forEach(lang => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'none');
+      const a = document.createElement('a');
+      a.href = lang.href;
+      a.setAttribute('role', 'menuitem');
+      if (lang.isCurrent) {
+        a.classList.add('is-current');
+        a.setAttribute('aria-current', 'true');
+      }
+      const img = document.createElement('img');
+      img.src = lang.flag;
+      img.alt = lang.label;
+      const span = document.createElement('span');
+      span.textContent = lang.label;
+      a.appendChild(img);
+      a.appendChild(span);
+      li.appendChild(a);
+      menu.appendChild(li);
+    });
+
+    dropdown.appendChild(toggle);
+    dropdown.appendChild(menu);
+    headerInner.appendChild(dropdown);
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = dropdown.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && dropdown.classList.contains('is-open')) {
+        dropdown.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.focus();
+      }
+    });
+  }
+
   const nav = document.querySelector('.nav');
   const navToggle = document.querySelector('.nav-toggle');
   const header = document.querySelector('.site-header');

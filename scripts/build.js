@@ -3,9 +3,29 @@
  * Build: copia solo el contenido público a ./_site/ para que Netlify
  * (o cualquier hosting) lo publique. Excluye lib/, scripts/, netlify/.
  * Las funciones se despliegan desde netlify/functions/ por separado.
+ * Tras copiar, ejecuta `scripts/render-posts.js` para pre-renderizar
+ * las entradas del blog como HTML estático (requiere TURSO_* en env).
  */
 
-import { cpSync, rmSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
+import { cpSync, rmSync, mkdirSync, existsSync, readdirSync, statSync, readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+
+function loadDotenv(path) {
+  if (!existsSync(path)) return;
+  const text = readFileSync(path, "utf-8");
+  for (const line of text.split(/\r?\n/)) {
+    if (!line || line.trim().startsWith("#")) continue;
+    const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
+    if (!m) continue;
+    let [, key, val] = m;
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = val;
+  }
+}
+
+loadDotenv(".env");
 
 const OUT = "_site";
 const ROOT = ".";
@@ -81,3 +101,12 @@ for (const entry of readdirSync(ROOT)) {
 }
 
 console.log(`✓ Build completo: ${files} entradas copiadas a ${OUT}/`);
+
+const render = spawnSync(process.execPath, ["scripts/render-posts.js"], {
+  stdio: "inherit",
+  env: process.env,
+});
+if (render.status !== 0) {
+  console.error("✗ render-posts falló");
+  process.exit(render.status ?? 1);
+}

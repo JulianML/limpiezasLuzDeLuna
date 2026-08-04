@@ -7,6 +7,7 @@ const BLOG_STRINGS = {
     loadingPosts: "Cargando entradas…",
     noPosts: "Aún no hay entradas publicadas.",
     loadError: "No se pudieron cargar las entradas. Inténtalo de nuevo más tarde.",
+    emptyForFilter: "No hay entradas en esta categoría.",
     postsCount: (n) => `${n} entrada${n === 1 ? "" : "s"}`,
     errorMeta: "Error al cargar",
     readMore: "Leer entrada",
@@ -19,11 +20,17 @@ const BLOG_STRINGS = {
     postLoadError: "No se pudo cargar la entrada.",
     postEmptySections: "Esta entrada no tiene secciones.",
     backToBlog: "← Volver al blog",
+    filterAll: "Todas",
+    filterClear: "Quitar filtro",
+    ctaTitle: "¿Necesitas limpiar tus cristales?",
+    ctaText: "Te pasamos presupuesto sin compromiso en menos de 24 h. Más de 30 años limpiando cristales en la Costa Blanca.",
+    ctaButton: "Más información",
   },
   "en-GB": {
     loadingPosts: "Loading posts…",
     noPosts: "No posts published yet.",
     loadError: "The posts could not be loaded. Please try again later.",
+    emptyForFilter: "No posts in this category.",
     postsCount: (n) => `${n} post${n === 1 ? "" : "s"}`,
     errorMeta: "Error loading",
     readMore: "Read post",
@@ -36,11 +43,17 @@ const BLOG_STRINGS = {
     postLoadError: "The post could not be loaded.",
     postEmptySections: "This post has no sections.",
     backToBlog: "← Back to the blog",
+    filterAll: "All",
+    filterClear: "Clear filter",
+    ctaTitle: "Need to clean your windows?",
+    ctaText: "Get a no-obligation quote within 24 h. 30+ years cleaning windows on the Costa Blanca.",
+    ctaButton: "More info",
   },
   "fr-FR": {
     loadingPosts: "Chargement des articles…",
     noPosts: "Aucun article publié pour le moment.",
     loadError: "Les articles n'ont pas pu être chargés. Veuillez réessayer plus tard.",
+    emptyForFilter: "Aucun article dans cette catégorie.",
     postsCount: (n) => `${n} article${n === 1 ? "" : "s"}`,
     errorMeta: "Erreur de chargement",
     readMore: "Lire l'article",
@@ -53,11 +66,17 @@ const BLOG_STRINGS = {
     postLoadError: "L'article n'a pas pu être chargé.",
     postEmptySections: "Cet article n'a pas de sections.",
     backToBlog: "← Retour au blog",
+    filterAll: "Toutes",
+    filterClear: "Réinitialiser",
+    ctaTitle: "Besoin de nettoyer vos vitres\u00a0?",
+    ctaText: "Devis gratuit sous 24 h. Plus de 30 ans à nettoyer les vitres sur la Costa Blanca.",
+    ctaButton: "Plus d'infos",
   },
   "ru-RU": {
     loadingPosts: "Загрузка статей…",
     noPosts: "Статьи пока не опубликованы.",
     loadError: "Не удалось загрузить статьи. Повторите попытку позже.",
+    emptyForFilter: "В этой категории пока нет статей.",
     postsCount: (n) => `${n} ${n === 1 ? "статья" : "статьи"}`,
     errorMeta: "Ошибка загрузки",
     readMore: "Читать статью",
@@ -70,11 +89,17 @@ const BLOG_STRINGS = {
     postLoadError: "Не удалось загрузить статью.",
     postEmptySections: "У этой статьи нет разделов.",
     backToBlog: "← Вернуться в блог",
+    filterAll: "Все",
+    filterClear: "Сбросить",
+    ctaTitle: "Нужно помыть стёкла?",
+    ctaText: "Бесплатный расчёт за 24 ч. Более 30 лет моем стёкла на Коста-Бланке.",
+    ctaButton: "Подробнее",
   },
   "de-DE": {
     loadingPosts: "Beiträge werden geladen…",
     noPosts: "Es wurden noch keine Beiträge veröffentlicht.",
     loadError: "Die Beiträge konnten nicht geladen werden. Bitte versuchen Sie es später erneut.",
+    emptyForFilter: "In dieser Kategorie sind keine Beiträge.",
     postsCount: (n) => `${n} Beitrag${n === 1 ? "" : "e"}`,
     errorMeta: "Fehler beim Laden",
     readMore: "Beitrag lesen",
@@ -87,6 +112,11 @@ const BLOG_STRINGS = {
     postLoadError: "Der Beitrag konnte nicht geladen werden.",
     postEmptySections: "Dieser Beitrag enthält keine Abschnitte.",
     backToBlog: "← Zurück zum Blog",
+    filterAll: "Alle",
+    filterClear: "Filter löschen",
+    ctaTitle: "Fenster müssen gereinigt werden?",
+    ctaText: "Kostenloses Angebot innerhalb von 24 h. Über 30 Jahre Erfahrung an der Costa Blanca.",
+    ctaButton: "Mehr Info",
   },
 };
 
@@ -151,6 +181,21 @@ function truncate(text, max) {
   const s = String(text || "").trim();
   if (s.length <= max) return s;
   return s.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
+}
+
+function categoryBadgeHtml(post) {
+  if (post.category && post.category.name) {
+    return `<a class="post-card__category" href="?category=${encodeURIComponent(post.category.slug)}" data-filter-category="${escapeHtml(post.category.slug)}">${escapeHtml(post.category.name)}</a>`;
+  }
+  return "";
+}
+
+function tagsBadgesHtml(post) {
+  if (!post.tags || !post.tags.length) return "";
+  const items = post.tags.slice(0, 4).map((t) =>
+    `<a class="post-card__tag" href="?tag=${encodeURIComponent(t.slug)}" data-filter-tag="${escapeHtml(t.slug)}">${escapeHtml(t.name)}</a>`
+  ).join("");
+  return `<div class="post-card__tags">${items}</div>`;
 }
 
 function buildIndexToc(posts) {
@@ -273,6 +318,65 @@ function setupTocMobileToggle() {
   });
 }
 
+function getActiveFilters() {
+  const params = new URLSearchParams(location.search);
+  return {
+    category: params.get("category") || "",
+    tag: params.get("tag") || "",
+  };
+}
+
+function buildPublicUrl(filters) {
+  const params = new URLSearchParams();
+  if (filters.category) params.set("category", filters.category);
+  if (filters.tag) params.set("tag", filters.tag);
+  const q = params.toString();
+  return q ? `?${q}` : "";
+}
+
+function renderCategoryChips(categories, filters) {
+  const wrap = document.getElementById("categoryChips");
+  if (!wrap) return;
+
+  const S = getStrings();
+  const allActive = !filters.category && !filters.tag;
+  const items = [];
+  items.push(`
+    <a class="chip chip--all${allActive ? " is-active" : ""}" href="index.html" data-filter-category="">
+      ${S.filterAll}
+    </a>
+  `);
+
+  for (const cat of categories) {
+    const isActive = cat.slug === filters.category;
+    const href = filters.category === cat.slug ? "index.html" : `?category=${encodeURIComponent(cat.slug)}`;
+    items.push(`
+      <a class="chip${isActive ? " is-active" : ""}" href="${href}" data-filter-category="${escapeHtml(cat.slug)}">
+        ${escapeHtml(cat.name)}
+      </a>
+    `);
+  }
+
+  if (filters.tag) {
+    items.push(`<a class="chip chip--clear" href="${filters.category ? `?category=${encodeURIComponent(filters.category)}` : "index.html"}">${S.filterClear} #${escapeHtml(filters.tag)}</a>`);
+  }
+
+  wrap.innerHTML = items.join("");
+}
+
+function renderTagChips(tags, filters) {
+  const wrap = document.getElementById("tagChips");
+  if (!wrap || !tags.length) return;
+  const items = tags.map((t) => {
+    const isActive = t.slug === filters.tag;
+    const href = filters.tag === t.slug
+      ? (filters.category ? `?category=${encodeURIComponent(filters.category)}` : "index.html")
+      : (filters.category ? `?category=${encodeURIComponent(filters.category)}&tag=${encodeURIComponent(t.slug)}` : `?tag=${encodeURIComponent(t.slug)}`);
+    return `<a class="chip chip--tag${isActive ? " is-active" : ""}" href="${href}" data-filter-tag="${escapeHtml(t.slug)}">${escapeHtml(t.name)}</a>`;
+  }).join("");
+  wrap.innerHTML = items;
+}
+
 async function loadList() {
   const grid = document.getElementById("postGrid");
   const meta = document.getElementById("postMeta");
@@ -280,16 +384,35 @@ async function loadList() {
   if (!grid) return;
 
   const S = getStrings();
+  const filters = getActiveFilters();
+
   grid.innerHTML = `<p class="blog-empty">${S.loadingPosts}</p>`;
   if (tocNav) tocNav.innerHTML = `<p class="blog-toc__empty">${S.tocLoading}</p>`;
 
+  const params = new URLSearchParams();
+  if (filters.category) params.set("category", filters.category);
+  if (filters.tag) params.set("tag", filters.tag);
+  const qs = params.toString();
+  const url = `${API_BASE}/posts-public${qs ? `?${qs}` : ""}`;
+
   try {
-    const res = await fetch(`${API_BASE}/posts-public`, { cache: "no-store" });
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const { posts } = await res.json();
+    const { posts, categories } = await res.json();
+
+    renderCategoryChips(categories || [], filters);
+
+    const allTags = new Map();
+    for (const p of posts) {
+      for (const t of (p.tags || [])) {
+        if (!allTags.has(t.slug)) allTags.set(t.slug, t);
+      }
+    }
+    renderTagChips(Array.from(allTags.values()), filters);
 
     if (!posts.length) {
-      grid.innerHTML = `<p class="blog-empty">${S.noPosts}</p>`;
+      const empty = filters.category || filters.tag ? S.emptyForFilter : S.noPosts;
+      grid.innerHTML = `<p class="blog-empty">${empty}</p>`;
       if (meta) meta.textContent = S.postsCount(0);
       buildIndexToc([]);
       return;
@@ -309,8 +432,12 @@ async function loadList() {
             <h2 class="post-card__title">${escapeHtml(p.title)}</h2>
             <h3 class="post-card__desc">${escapeHtml(desc)}</h3>
             <p class="post-card__excerpt">${escapeHtml(p.excerpt || "")}</p>
+            <div class="post-card__cattags">
+              ${categoryBadgeHtml(p)}
+              ${tagsBadgesHtml(p)}
+            </div>
             <div class="post-card__foot">
-              <a class="post-card__more" href="post.html?slug=${encodeURIComponent(p.slug)}">
+              <a class="post-card__more" href="post/${encodeURIComponent(p.slug)}/">
                 ${S.readMore}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
               </a>
@@ -331,12 +458,20 @@ async function loadList() {
   }
 }
 
+function getPostSlug() {
+  const params = new URLSearchParams(location.search);
+  const fromQuery = params.get("slug");
+  if (fromQuery) return fromQuery;
+  const match = location.pathname.match(/\/blog\/post\/([^/]+)/);
+  if (match) return decodeURIComponent(match[1]);
+  return null;
+}
+
 async function loadPost() {
   const root = document.getElementById("postRoot");
   if (!root) return;
 
-  const params = new URLSearchParams(location.search);
-  const slug = params.get("slug");
+  const slug = getPostSlug();
   if (!slug) {
     const S = getStrings();
     root.innerHTML = `<p class="blog-empty">${S.postMissing}</p>`;
@@ -357,11 +492,29 @@ async function loadPost() {
 
     document.title = `${post.title} · Blog Limpiezas Luz de Luna`;
 
+    const catLink = post.category
+      ? `<a class="post-page__category" href="../index.html?category=${encodeURIComponent(post.category.slug)}">${escapeHtml(post.category.name)}</a>`
+      : "";
+    const tagsList = (post.tags && post.tags.length)
+      ? `<div class="post-page__tags">${post.tags.map((t) => `<a class="post-page__tag" href="../index.html?tag=${encodeURIComponent(t.slug)}">${escapeHtml(t.name)}</a>`).join("")}</div>`
+      : "";
+
     root.innerHTML = `
       <p class="post-page__meta">${escapeHtml(post.dateLabel)}</p>
       <h1>${escapeHtml(post.title)}</h1>
+      <div class="post-page__cattags">${catLink}${tagsList}</div>
       ${post.imageDataUrl ? `<img class="post-page__img" src="${escapeHtml(post.imageDataUrl)}" alt="${escapeHtml(post.title)}">` : ""}
       <div class="post-page__body">${markdownToHtml(post.body)}</div>
+      <aside class="post-cta">
+        <div class="post-cta__body">
+          <h3 class="post-cta__title">${escapeHtml(S.ctaTitle)}</h3>
+          <p class="post-cta__text">${escapeHtml(S.ctaText)}</p>
+        </div>
+        <a class="post-cta__btn" href="../presupuesto.html">
+          ${escapeHtml(S.ctaButton)}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </aside>
       <a class="post-page__back" href="index.html">${S.backToBlog}</a>
     `;
 

@@ -13,6 +13,7 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import { createClient } from "@libsql/client";
+import { ensureSchema } from "../lib/db.js";
 
 function loadDotenv() {
   const path = ".env";
@@ -38,31 +39,6 @@ if (!authToken) { console.error("Falta TURSO_AUTH_TOKEN"); process.exit(1); }
 
 const db = createClient({ url, authToken });
 
-const DDL = [
-  `CREATE TABLE IF NOT EXISTS posts (
-     id TEXT PRIMARY KEY,
-     slug TEXT UNIQUE NOT NULL,
-     title TEXT NOT NULL,
-     excerpt TEXT NOT NULL DEFAULT '',
-     body TEXT NOT NULL DEFAULT '',
-     date_label TEXT NOT NULL,
-     image_data_url TEXT,
-     published INTEGER NOT NULL DEFAULT 0,
-     created_at TEXT NOT NULL DEFAULT (datetime('now')),
-     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-   )`,
-  `CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug)`,
-  `CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(published)`,
-  `CREATE INDEX IF NOT EXISTS idx_posts_updated_at ON posts(updated_at DESC)`,
-];
-
-async function ensureSchema() {
-  for (const stmt of DDL) {
-    await db.execute(stmt);
-  }
-  console.log("✓ Schema listo (tabla posts + índices).");
-}
-
 function id() {
   return "xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
@@ -71,6 +47,32 @@ function id() {
   });
 }
 
+const CATEGORIES = [
+  { id: "cat-clima",     slug: "clima-costa-blanca", name: "El Clima de la Costa Blanca", description: "Calima, salitre, viento y todo lo que el Mediterráneo le hace a tus cristales.", sortOrder: 1 },
+  { id: "cat-negocios",  slug: "negocios-hoteles",   name: "Guía para Negocios y Hoteles", description: "Estrategias y mantenimiento para escaparates, fachadas y cristalería profesional.", sortOrder: 2 },
+  { id: "cat-hogar",     slug: "soluciones-hogar",   name: "Soluciones para el Hogar", description: "Guías prácticas para mantener los cristales de casa como el primer día.", sortOrder: 3 },
+  { id: "cat-seguridad", slug: "seguridad-tecnica",  name: "Seguridad y Técnica", description: "Cómo trabajamos: técnicas, materiales y seguridad en altura.", sortOrder: 4 },
+];
+
+const TAGS = [
+  { id: "tag-clima",         slug: "clima",          name: "Clima" },
+  { id: "tag-costa-blanca",  slug: "costa-blanca",   name: "Costa Blanca" },
+  { id: "tag-calima",        slug: "calima",         name: "Calima" },
+  { id: "tag-salitre",       slug: "salitre",        name: "Salitre" },
+  { id: "tag-hogar",         slug: "hogar",          name: "Hogar" },
+  { id: "tag-negocios",      slug: "negocios",       name: "Negocios" },
+  { id: "tag-escaparate",    slug: "escaparate",     name: "Escaparate" },
+  { id: "tag-altura",        slug: "altura",         name: "Cristales en altura" },
+  { id: "tag-seguridad",     slug: "seguridad",      name: "Seguridad" },
+  { id: "tag-agua-osm",      slug: "agua-osmotizada", name: "Agua osmotizada" },
+  { id: "tag-rappel",        slug: "rappel",         name: "Rappel" },
+  { id: "tag-mantenimiento", slug: "mantenimiento",  name: "Mantenimiento" },
+  { id: "tag-vidrio",        slug: "vidrio",         name: "Vidrio" },
+  { id: "tag-temporada",     slug: "temporada",      name: "Temporada" },
+  { id: "tag-espejos",       slug: "espejos",        name: "Espejos" },
+  { id: "tag-productos",     slug: "productos",      name: "Productos" },
+];
+
 const SEED = [
   {
     slug: "calima-costa-blanca",
@@ -78,7 +80,9 @@ const SEED = [
     excerpt: "Cómo limpiar el barro del Sahara sin rayar el vidrio de tu ventana.",
     dateLabel: "5 de marzo de 2026",
     published: 1,
-    body: `## ¿Por qué la calima deja los cristales “imposibles”?
+    categoryId: "cat-clima",
+    tagIds: ["tag-clima", "tag-calima", "tag-costa-blanca", "tag-agua-osm"],
+    body: `## ¿Por qué la calima deja los cristales "imposibles"?
 
 El polvo que llega del Sahara tiene una composición mineral abrasiva. Si lo frotas en seco, lo que parece limpiar lo que hace es rallar el cristal.
 
@@ -100,13 +104,15 @@ El polvo que llega del Sahara tiene una composición mineral abrasiva. Si lo fro
     excerpt: "La sal del Mediterráneo cristaliza en los poros del vidrio y lo opaca con el tiempo.",
     dateLabel: "12 de febrero de 2026",
     published: 1,
+    categoryId: "cat-clima",
+    tagIds: ["tag-clima", "tag-salitre", "tag-costa-blanca", "tag-mantenimiento"],
     body: `## ¿Qué es el salitre?
 
 La sal marina disuelta en el aire se deposita sobre el cristal. Al evaporarse, cristaliza y crea una micro-capa opaca.
 
 ## Cómo identificarlo
 
-Si al limpiar el cristal notas una “neblina” que no se va ni con limpiacristales, probablemente es salitre.
+Si al limpiar el cristal notas una "neblina" que no se va ni con limpiacristales, probablemente es salitre.
 
 ## Tratamiento
 
@@ -120,6 +126,8 @@ Si al limpiar el cristal notas una “neblina” que no se va ni con limpiacrist
     excerpt: "El estado de tu escaparate habla antes que tu mejor vendedor.",
     dateLabel: "20 de enero de 2026",
     published: 1,
+    categoryId: "cat-negocios",
+    tagIds: ["tag-negocios", "tag-escaparate", "tag-mantenimiento"],
     body: `## La regla de los 3 segundos
 
 Un cliente decide en 3 segundos si entra o sigue caminando. Un cristal sucio grita "abandonado" antes que cualquier otro detalle.
@@ -132,8 +140,8 @@ Un cliente decide en 3 segundos si entra o sigue caminando. Un cristal sucio gri
 
 ## Frecuencia recomendada
 
-- Comercio a pie de calle: limpieza exterior cada 2–3 días.
-- Interior: cada 7–10 días.
+- Comercio a pie de calle: limpieza exterior cada 2-3 días.
+- Interior: cada 7-10 días.
 - Escaparate completo: cada 15 días.`,
   },
   {
@@ -142,6 +150,8 @@ Un cliente decide en 3 segundos si entra o sigue caminando. Un cristal sucio gri
     excerpt: "Cero residuos, cero marcas. Por qué profesionales de todo el mundo la usan.",
     dateLabel: "10 de enero de 2026",
     published: 1,
+    categoryId: "cat-seguridad",
+    tagIds: ["tag-agua-osm", "tag-altura", "tag-mantenimiento"],
     body: `## El problema del agua del grifo
 
 Contiene calcio, magnesio y sales. Al secarse sobre el cristal, dejan las típicas marcas blancas.
@@ -158,7 +168,24 @@ Ha pasado por un sistema de osmosis inversa que elimina el 99% de minerales y sa
   },
 ];
 
-async function seed() {
+async function seedTaxonomy() {
+  for (const c of CATEGORIES) {
+    await db.execute({
+      sql: `INSERT OR IGNORE INTO categories (id, slug, name, description, sort_order)
+            VALUES (?, ?, ?, ?, ?)`,
+      args: [c.id, c.slug, c.name, c.description, c.sortOrder],
+    });
+  }
+  for (const t of TAGS) {
+    await db.execute({
+      sql: `INSERT OR IGNORE INTO tags (id, slug, name) VALUES (?, ?, ?)`,
+      args: [t.id, t.slug, t.name],
+    });
+  }
+  console.log(`✓ Taxonomía: ${CATEGORIES.length} categorías, ${TAGS.length} tags.`);
+}
+
+async function seedPosts() {
   let inserted = 0;
   for (const post of SEED) {
     const exists = await db.execute({ sql: `SELECT id FROM posts WHERE slug = ?`, args: [post.slug] });
@@ -166,11 +193,18 @@ async function seed() {
       console.log(`↺ Ya existe: ${post.slug}`);
       continue;
     }
+    const postId = id();
     await db.execute({
-      sql: `INSERT INTO posts (id, slug, title, excerpt, body, date_label, published)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      args: [id(), post.slug, post.title, post.excerpt, post.body, post.dateLabel, post.published],
+      sql: `INSERT INTO posts (id, slug, title, excerpt, body, date_label, published, category_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [postId, post.slug, post.title, post.excerpt, post.body, post.dateLabel, post.published, post.categoryId],
     });
+    for (const tagId of post.tagIds) {
+      await db.execute({
+        sql: `INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)`,
+        args: [postId, tagId],
+      });
+    }
     inserted++;
     console.log(`+ Insertada: ${post.slug}`);
   }
@@ -182,7 +216,11 @@ const wantsSeed = process.argv.includes("--seed");
 (async () => {
   try {
     await ensureSchema();
-    if (wantsSeed) await seed();
+    console.log("✓ Schema listo (categories, tags, post_tags, posts + índices).");
+    if (wantsSeed) {
+      await seedTaxonomy();
+      await seedPosts();
+    }
     console.log("✓ Listo.");
   } catch (err) {
     console.error("Error:", err);

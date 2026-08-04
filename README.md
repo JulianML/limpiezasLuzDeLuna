@@ -125,14 +125,27 @@ https://tu-dominio.com/.netlify/functions/auth-check
 
 | Método | Endpoint | Body / Query |
 |---|---|---|
-| `GET` | `/.netlify/functions/posts-list` | — |
-| `POST` | `/.netlify/functions/posts-create` | `{ title, slug, excerpt, body, dateLabel, imageDataUrl, published }` |
+| `GET` | `/.netlify/functions/posts-list` | — (devuelve también `categories` y `tags`) |
+| `POST` | `/.netlify/functions/posts-create` | `{ title, slug, excerpt, body, dateLabel, imageDataUrl, published, categoryId, tags: ["calima", "salitre"] }` |
 | `PUT` | `/.netlify/functions/posts-update?id=X` | mismo body |
 | `DELETE` | `/.netlify/functions/posts-delete?id=X` | — |
 
-## Esquema de la tabla
+`tags` puede ser un array de strings o un string separado por comas/punto-y-coma.
+Si un tag no existe, se crea automáticamente al guardar. `categoryId` debe
+existir en `categories` o se rechaza.
+
+### Filtros del blog público
+
+| Endpoint | Parámetros |
+|---|---|
+| `/.netlify/functions/posts-public` | `?category=slug`, `?tag=slug`, `?q=busqueda` |
+
+Devuelve `{ posts, categories }`. Cada post trae `category` y `tags` poblados.
+
+## Esquema de la base de datos
 
 ```sql
+-- Posts (cada entrada del blog)
 CREATE TABLE posts (
   id TEXT PRIMARY KEY,
   slug TEXT UNIQUE NOT NULL,
@@ -142,10 +155,43 @@ CREATE TABLE posts (
   date_label TEXT NOT NULL,
   image_data_url TEXT,
   published INTEGER NOT NULL DEFAULT 0,
+  category_id TEXT,                       -- FK a categories.id
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Categorías (una por entrada, elegida desde el editor)
+CREATE TABLE categories (
+  id TEXT PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Tags (muchos por entrada, auto-creados al guardar si no existen)
+CREATE TABLE tags (
+  id TEXT PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Relación N:M posts <-> tags
+CREATE TABLE post_tags (
+  post_id TEXT NOT NULL,
+  tag_id  TEXT NOT NULL,
+  PRIMARY KEY (post_id, tag_id)
+);
 ```
+
+Hay 4 categorías seed (Clima, Negocios, Hogar, Seguridad), 16 tags seed
+(clima, costa-blanca, calima, salitre, hogar, negocios, escaparate, altura,
+seguridad, agua-osmotizada, rappel, mantenimiento, vidrio, temporada,
+espejos, productos) y 11 posts publicados con cuerpo completo. La migración
+de `posts` (añadir `category_id`) es idempotente: `init-db.js` detecta la
+columna y solo la agrega si falta.
 
 ## Seguridad
 
