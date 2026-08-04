@@ -1,0 +1,24 @@
+{
+  "name": "limpiezas-luz-de-luna",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Limpiezas Luz de Luna — web estática + Netlify Functions + Turso",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "netlify dev",
+    "dev:simple": "npx --yes http-server -p 8889 -c-1 --cors",
+    "init:db": "node scripts/init-db.js",
+    "seed:db": "node scripts/init-db.js --seed"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

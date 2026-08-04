@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="priceBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f4f5fb"/>
+      <stop offset="100%" stop-color="#e8eaf6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#priceBg)"/>
+  <rect x="90" y="80" width="220" height="140" rx="12" fill="#ffffff"/>
+  <rect x="90" y="80" width="220" height="32" fill="#222875"/>
+  <text x="200" y="103" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="2">PRESUPUESTO</text>
+  <line x1="120" y1="135" x2="280" y2="135" stroke="#cbd5e1" stroke-width="2"/>
+  <line x1="120" y1="155" x2="280" y2="155" stroke="#cbd5e1" stroke-width="2"/>
+  <line x1="120" y1="175" x2="240" y2="175" stroke="#cbd5e1" stroke-width="2"/>
+  <line x1="120" y1="195" x2="220" y2="195" stroke="#cbd5e1" stroke-width="2"/>
+  <circle cx="200" cy="150" r="6" fill="#222875" opacity=".25"/>
+  <circle cx="200" cy="150" r="3" fill="#222875"/>
+</svg>

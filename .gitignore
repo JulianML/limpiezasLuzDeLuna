@@ -1,0 +1,12 @@
+node_modules/
+.netlify/
+_site/
+dist/
+.DS_Store
+.env
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+.vscode/
+.idea/

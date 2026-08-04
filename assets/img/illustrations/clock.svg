@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="clockBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eef0f7"/>
+      <stop offset="100%" stop-color="#dde0ec"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#clockBg)"/>
+  <circle cx="200" cy="150" r="90" fill="#ffffff"/>
+  <circle cx="200" cy="150" r="90" fill="none" stroke="#222875" stroke-width="6"/>
+  <circle cx="200" cy="150" r="76" fill="none" stroke="#222875" stroke-width="1.5" opacity=".4"/>
+  <g stroke="#222875" stroke-width="4" stroke-linecap="round">
+    <line x1="200" y1="80" x2="200" y2="92"/>
+    <line x1="200" y1="208" x2="200" y2="220"/>
+    <line x1="130" y1="150" x2="142" y2="150"/>
+    <line x1="258" y1="150" x2="270" y2="150"/>
+  </g>
+  <g stroke="#c89968" stroke-width="3" stroke-linecap="round">
+    <line x1="200" y1="150" x2="200" y2="100"/>
+    <line x1="200" y1="150" x2="245" y2="170"/>
+  </g>
+  <circle cx="200" cy="150" r="6" fill="#1a1d3f"/>
+  <circle cx="270" cy="80" r="14" fill="#c89968"/>
+  <path d="M262 80 L268 86 L278 74" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+</svg>

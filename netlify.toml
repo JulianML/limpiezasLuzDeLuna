@@ -1,0 +1,89 @@
+[build]
+  publish = "_site"
+  command = "node scripts/build.js"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[dev]
+  framework = "#static"
+  command = "npx --yes http-server -p 8889 -c-1 --cors"
+  targetPort = 8889
+  port = 8888
+
+[[headers]]
+  for = "/backoffice/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Cache-Control = "no-store"
+
+# Cinturón y tirantes: aunque el build ya excluye estos archivos,
+# bloqueamos cualquier ruta que intente acceder a ficheros sensibles
+# (.env, package.json, lib/, scripts/, node_modules/, git, etc.).
+[[redirects]]
+  from = "/.env"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.env.example"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.env.local"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.env.*"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/lib/*"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/scripts/*"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package.json"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/netlify.toml"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.git/*"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/node_modules/*"
+  to = "/404"
+  status = 404
+  force = true

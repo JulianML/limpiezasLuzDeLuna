@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Backoffice · Blog Limpiezas Luz de Luna</title>
+<link rel="icon" href="../assets/img/favicon.webp" sizes="32x32">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/css/backoffice.css">
+</head>
+<body>
+
+<!-- ─────────── LOGIN ─────────── -->
+<section id="loginView" class="login-view">
+  <div class="login-card">
+    <div class="login-card__brand">
+      <span class="login-card__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 2 L20 6 L20 12 Q20 18 12 22 Q4 18 4 12 L4 6 Z"/></svg>
+      </span>
+      <h1>Backoffice</h1>
+      <p>Limpiezas Luz de Luna</p>
+    </div>
+    <form id="loginForm" class="login-form" autocomplete="off">
+      <label for="loginPassword">Contraseña</label>
+      <div class="login-form__input">
+        <input id="loginPassword" name="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+        <button type="button" class="login-form__toggle" aria-label="Mostrar u ocultar contraseña" data-toggle="loginPassword">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <p id="loginError" class="login-form__error" role="alert" hidden></p>
+      <button type="submit" class="btn btn--primary btn--block" id="loginSubmit">Entrar</button>
+    </form>
+  </div>
+</section>
+
+<!-- ─────────── APP ─────────── -->
+<section id="appView" class="app-view" hidden>
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-brand" href="../blog/index.html">
+        <span class="app-brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2 L20 6 L20 12 Q20 18 12 22 Q4 18 4 12 L4 6 Z"/></svg>
+        </span>
+        <span>Limpiezas Luz de Luna</span>
+        <span class="app-brand__chip">Backoffice</span>
+      </a>
+      <div class="app-header__actions">
+        <a class="app-header__link" href="../blog/index.html" target="_blank" rel="noopener">
+          Ver blog
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+        </a>
+        <button type="button" id="newPostBtn" class="btn btn--primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Nueva entrada
+        </button>
+        <button type="button" id="logoutBtn" class="btn btn--ghost">Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="app-container">
+
+      <div class="app-toolbar">
+        <div>
+          <h2 class="app-title">Entradas del blog</h2>
+          <p id="appSubtitle" class="app-subtitle">Cargando…</p>
+        </div>
+        <div class="app-toolbar__filters">
+          <input id="searchInput" type="search" placeholder="Buscar por título o slug…" aria-label="Buscar">
+          <select id="statusFilter" aria-label="Filtrar por estado">
+            <option value="all">Todas</option>
+            <option value="published">Publicadas</option>
+            <option value="draft">Borradores</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="postsList" class="posts-list">
+        <p class="posts-list__empty">Cargando entradas…</p>
+      </div>
+
+    </div>
+  </main>
+</section>
+
+<!-- ─────────── EDITOR MODAL ─────────── -->
+<div id="editorView" class="editor" hidden aria-hidden="true">
+  <div class="editor__backdrop" data-close-editor></div>
+  <div class="editor__panel" role="dialog" aria-labelledby="editorTitle" aria-modal="true">
+    <header class="editor__header">
+      <h2 id="editorTitle">Nueva entrada</h2>
+      <button type="button" class="editor__close" data-close-editor aria-label="Cerrar editor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <form id="editorForm" class="editor__form" autocomplete="off">
+      <div class="editor__row editor__row--two">
+        <div class="field">
+          <label for="title">Título <span class="req">*</span></label>
+          <input id="title" name="title" type="text" maxlength="200" required placeholder="Ej. Guía de supervivencia a la Calima">
+        </div>
+        <div class="field">
+          <label for="slug">Slug <span class="req">*</span></label>
+          <input id="slug" name="slug" type="text" maxlength="80" required placeholder="guia-calima">
+          <small>URL final: <code>/blog/post.html?slug=<span id="slugPreview">…</span></code></small>
+        </div>
+      </div>
+
+      <div class="editor__row editor__row--two">
+        <div class="field">
+          <label for="dateLabel">Fecha visible</label>
+          <input id="dateLabel" name="dateLabel" type="text" maxlength="60" placeholder="15 de marzo de 2026">
+        </div>
+        <div class="field field--switch">
+          <label for="published">Estado</label>
+          <div class="switch">
+            <input id="published" name="published" type="checkbox">
+            <span class="switch__track"><span class="switch__dot"></span></span>
+            <span class="switch__label" id="publishedLabel">Borrador</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="excerpt">Descripción (bajada)</label>
+        <textarea id="excerpt" name="excerpt" rows="2" maxlength="500" placeholder="Resumen breve que se muestra en la tarjeta y el TOC."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="body">Cuerpo (Markdown)</label>
+        <div class="editor__body-grid">
+          <textarea id="body" name="body" rows="16" spellcheck="false" placeholder="## Introducción&#10;&#10;Texto de la entrada…&#10;&#10;## Sección 1&#10;### Apartado&#10;Más texto…"></textarea>
+          <div class="editor__preview" id="bodyPreview" aria-live="polite">
+            <p class="editor__preview-hint">La vista previa se actualiza al escribir.</p>
+          </div>
+        </div>
+        <small>Soporta <code>## H2</code>, <code>### H3</code> y listas con <code>-</code>.</small>
+      </div>
+
+      <div class="field">
+        <label>Imagen destacada</label>
+        <div class="image-field">
+          <div class="image-field__preview" id="imagePreview" aria-live="polite">
+            <span class="image-field__placeholder">Sin imagen</span>
+          </div>
+          <div class="image-field__actions">
+            <label class="btn btn--ghost" for="imageFile">Subir archivo</label>
+            <input id="imageFile" type="file" accept="image/*" hidden>
+            <button type="button" class="btn btn--ghost" id="imageClearBtn">Quitar</button>
+            <small>Se almacena como data URL en la base de datos (máx. ~4 MB).</small>
+          </div>
+        </div>
+      </div>
+
+      <p id="editorError" class="editor__error" role="alert" hidden></p>
+      <p id="editorOk" class="editor__ok" role="status" hidden></p>
+
+      <footer class="editor__footer">
+        <button type="button" class="btn btn--ghost" id="deleteBtn" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          Eliminar
+        </button>
+        <div class="editor__footer-spacer"></div>
+        <button type="button" class="btn btn--ghost" data-close-editor>Cancelar</button>
+        <button type="submit" class="btn btn--primary" id="saveBtn">
+          <span class="btn__label">Guardar</span>
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<!-- ─────────── TOAST ─────────── -->
+<div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+
+<script src="./assets/js/backoffice.js" defer></script>
+</body>
+</html>
