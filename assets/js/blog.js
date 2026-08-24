@@ -1,6 +1,7 @@
 /* Blog — list + detail rendering */
 
 const API_BASE = "/.netlify/functions";
+const PLACEHOLDER_IMG = "../assets/img/illustrations/blog-placeholder.svg";
 
 const BLOG_STRINGS = {
   "es-ES": {
@@ -421,10 +422,11 @@ async function loadList() {
     grid.innerHTML = posts.map((p, i) => {
       const num = String(i + 1).padStart(2, "0");
       const safeId = `post-${slugifySlug(p.slug)}`;
-      const desc = truncate(p.excerpt || "", 140);
+      const desc = truncate(p.excerpt || "", 80);
+      const imgUrl = p.imageDataUrl || PLACEHOLDER_IMG;
       return `
         <article class="post-card" id="${escapeHtml(safeId)}">
-          <div class="post-card__img" style="background-image:url('${escapeHtml(p.imageDataUrl || "")}')" role="img" aria-label="${escapeHtml(p.title)}">
+          <div class="post-card__img" style="background-image:url('${escapeHtml(imgUrl)}')" role="img" aria-label="${escapeHtml(p.title)}">
             <span class="post-card__num">${num}</span>
           </div>
           <div class="post-card__body">

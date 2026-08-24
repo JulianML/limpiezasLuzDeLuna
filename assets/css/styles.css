@@ -1514,8 +1514,8 @@ h1, h2, h3, h4 { margin: 0; font-family: "DM Sans", sans-serif; letter-spacing: 
   line-height: 1.45;
   letter-spacing: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1525,8 +1525,8 @@ h1, h2, h3, h4 { margin: 0; font-family: "DM Sans", sans-serif; letter-spacing: 
   margin: 0 0 24px;
   line-height: 1.65;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
@@ -2295,6 +2295,42 @@ h1, h2, h3, h4 { margin: 0; font-family: "DM Sans", sans-serif; letter-spacing: 
 .contact-card p { font-size: 15px; color: var(--ink-soft); margin: 0 0 8px; line-height: 1.55; }
 .contact-card a { color: var(--brand); font-weight: 600; }
 .contact-card a:hover { text-decoration: underline; }
+
+/* ==========================================================================
+   SERVICE AREA MAP
+   ========================================================================== */
+.service-area-map {
+  height: 420px;
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  margin: 20px 0;
+  background: var(--brand-soft-2);
+  overflow: hidden;
+}
+.service-area-map .service-area-map__glow {
+  animation: service-area-glow 2.6s ease-in-out infinite;
+}
+@keyframes service-area-glow {
+  0%, 100% { fill-opacity: 0.25; }
+  50% { fill-opacity: 0.45; }
+}
+.service-area-map__label {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+.service-area-map__label::before { display: none; }
+.service-area-map .leaflet-popup-content-wrapper { border-radius: 10px; }
+.service-area-map .leaflet-popup-content { font-family: inherit; font-size: 14px; color: var(--ink); margin: 10px 14px; }
+.service-area-map .leaflet-popup-content strong { color: var(--brand); }
 
 /* ==========================================================================
    STATS COUNTER (nuevo)
