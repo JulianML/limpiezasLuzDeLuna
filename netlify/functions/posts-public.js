@@ -37,15 +37,16 @@ export async function handler(event) {
     }
 
     // Nota: NO seleccionamos p.image_data_url aquí a propósito. Las imágenes
-    // van en base64 y algunas pesan >1 MB; con varias decenas de entradas
-    // (multiplicadas x5 al haber traducciones) la respuesta supera el límite
-    // de 6 MB de las Netlify Functions (AWS Lambda) y la función devuelve
-    // 502 "ResponseSizeTooLarge". El listado usa el placeholder genérico
-    // (blog.js ya cae a PLACEHOLDER_IMG si imageDataUrl viene vacío); la
-    // imagen real de cada entrada se sirve solo en posts-get.js, donde una
-    // única imagen nunca se acerca al límite.
+    // originales van en base64 y algunas pesan >1 MB; con varias decenas de
+    // entradas (multiplicadas x5 al haber traducciones) la respuesta supera
+    // el límite de 6 MB de las Netlify Functions (AWS Lambda) y la función
+    // devuelve 502 "ResponseSizeTooLarge". El listado usa en su lugar
+    // thumbnail_data_url, una miniatura ligera (~480px, JPEG comprimido,
+    // generada en posts-create/posts-update vía lib/image.js) que sí cabe
+    // sin problema. La imagen completa se sirve solo en posts-get.js, para
+    // una única entrada.
     const sql = `
-      SELECT p.id, p.slug, p.title, p.excerpt, p.date_label,
+      SELECT p.id, p.slug, p.title, p.excerpt, p.date_label, p.thumbnail_data_url,
              p.published, p.category_id, p.locale, p.created_at, p.updated_at,
              c.slug AS category_slug, c.name AS category_name
       FROM posts p
@@ -61,7 +62,7 @@ export async function handler(event) {
       title: row.title,
       excerpt: row.excerpt || "",
       dateLabel: row.date_label,
-      imageDataUrl: "",
+      imageDataUrl: row.thumbnail_data_url || "",
       published: !!row.published,
       categoryId: row.category_id || null,
       locale: row.locale,

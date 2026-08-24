@@ -7,6 +7,7 @@ import {
   slugifyTagSlug,
   normalizeLocale,
 } from "../../lib/db.js";
+import { generateThumbnailDataUrl } from "../../lib/image.js";
 import { isAuthenticated, json, methodNotAllowed } from "../../lib/auth.js";
 
 function slugify(s) {
@@ -128,7 +129,7 @@ export async function handler(event) {
     const db = getDb();
 
     const current = await db.execute({
-      sql: `SELECT id FROM posts WHERE id = ? LIMIT 1`,
+      sql: `SELECT id, image_data_url, thumbnail_data_url FROM posts WHERE id = ? LIMIT 1`,
       args: [id],
     });
     if (!current.rows.length) return json(404, { error: "Entrada no encontrada" });
@@ -147,11 +148,20 @@ export async function handler(event) {
       if (!cat.rows.length) return json(400, { error: "La categoría no existe" });
     }
 
+    // Solo regeneramos la miniatura si la imagen realmente cambió (evita
+    // recomprimir en cada guardado cuando el admin no ha tocado la foto).
+    const previousImage = current.rows[0].image_data_url || "";
+    const thumbnailDataUrl = !imageDataUrl
+      ? ""
+      : imageDataUrl === previousImage
+        ? (current.rows[0].thumbnail_data_url || await generateThumbnailDataUrl(imageDataUrl))
+        : await generateThumbnailDataUrl(imageDataUrl);
+
     await db.execute({
       sql: `UPDATE posts
-            SET slug = ?, title = ?, excerpt = ?, body = ?, date_label = ?, image_data_url = ?, published = ?, category_id = ?, locale = ?, updated_at = datetime('now')
+            SET slug = ?, title = ?, excerpt = ?, body = ?, date_label = ?, image_data_url = ?, thumbnail_data_url = ?, published = ?, category_id = ?, locale = ?, updated_at = datetime('now')
             WHERE id = ?`,
-      args: [slug, title, excerpt, bodyMd, dateLabel, imageDataUrl, published, categoryId, locale, id],
+      args: [slug, title, excerpt, bodyMd, dateLabel, imageDataUrl, thumbnailDataUrl, published, categoryId, locale, id],
     });
 
     if (Array.isArray(body.tags) || typeof body.tags === "string") {

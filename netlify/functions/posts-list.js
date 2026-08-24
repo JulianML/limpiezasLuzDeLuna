@@ -58,9 +58,10 @@ export async function handler(event) {
     // Con las 5 traducciones por entrada, decenas de posts con cuerpo completo
     // + imágenes en base64 (>1 MB cada una) superarían con facilidad el
     // límite de 6 MB de las Netlify Functions. El editor pide el detalle
-    // completo por separado vía ?id=... (rama de arriba) cuando hace falta.
+    // completo por separado vía ?id=... (rama de arriba) cuando hace falta;
+    // para la miniatura de cada fila usamos thumbnail_data_url (ligera).
     const result = await db.execute({
-      sql: `SELECT id, slug, title, excerpt, date_label, published, category_id, locale, created_at, updated_at
+      sql: `SELECT id, slug, title, excerpt, date_label, thumbnail_data_url, published, category_id, locale, created_at, updated_at
             FROM posts
             ${whereSql}
             ORDER BY datetime(updated_at) DESC, datetime(created_at) DESC`,
@@ -73,7 +74,7 @@ export async function handler(event) {
       title: row.title,
       excerpt: row.excerpt || "",
       dateLabel: row.date_label,
-      imageDataUrl: "",
+      imageDataUrl: row.thumbnail_data_url || "",
       published: !!row.published,
       categoryId: row.category_id || null,
       locale: row.locale,

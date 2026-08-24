@@ -8,6 +8,7 @@ import {
   slugifyTagSlug,
   normalizeLocale,
 } from "../../lib/db.js";
+import { generateThumbnailDataUrl } from "../../lib/image.js";
 import { isAuthenticated, json, methodNotAllowed } from "../../lib/auth.js";
 
 function slugify(s) {
@@ -133,10 +134,12 @@ export async function handler(event) {
       if (!cat.rows.length) return json(400, { error: "La categoría no existe" });
     }
 
+    const thumbnailDataUrl = imageDataUrl ? await generateThumbnailDataUrl(imageDataUrl) : "";
+
     await db.execute({
-      sql: `INSERT INTO posts (id, slug, title, excerpt, body, date_label, image_data_url, published, category_id, locale)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [id, slug, title, excerpt, bodyMd, dateLabel, imageDataUrl, published, categoryId, locale],
+      sql: `INSERT INTO posts (id, slug, title, excerpt, body, date_label, image_data_url, thumbnail_data_url, published, category_id, locale)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [id, slug, title, excerpt, bodyMd, dateLabel, imageDataUrl, thumbnailDataUrl, published, categoryId, locale],
     });
 
     const tagNames = parseTagsPayload(body.tags);
