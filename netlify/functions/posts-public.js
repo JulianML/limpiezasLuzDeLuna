@@ -36,8 +36,16 @@ export async function handler(event) {
       args.push(`%${search}%`, `%${search}%`);
     }
 
+    // Nota: NO seleccionamos p.image_data_url aquí a propósito. Las imágenes
+    // van en base64 y algunas pesan >1 MB; con varias decenas de entradas
+    // (multiplicadas x5 al haber traducciones) la respuesta supera el límite
+    // de 6 MB de las Netlify Functions (AWS Lambda) y la función devuelve
+    // 502 "ResponseSizeTooLarge". El listado usa el placeholder genérico
+    // (blog.js ya cae a PLACEHOLDER_IMG si imageDataUrl viene vacío); la
+    // imagen real de cada entrada se sirve solo en posts-get.js, donde una
+    // única imagen nunca se acerca al límite.
     const sql = `
-      SELECT p.id, p.slug, p.title, p.excerpt, p.date_label, p.image_data_url,
+      SELECT p.id, p.slug, p.title, p.excerpt, p.date_label,
              p.published, p.category_id, p.locale, p.created_at, p.updated_at,
              c.slug AS category_slug, c.name AS category_name
       FROM posts p
@@ -53,7 +61,7 @@ export async function handler(event) {
       title: row.title,
       excerpt: row.excerpt || "",
       dateLabel: row.date_label,
-      imageDataUrl: row.image_data_url || "",
+      imageDataUrl: "",
       published: !!row.published,
       categoryId: row.category_id || null,
       locale: row.locale,

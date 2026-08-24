@@ -5,6 +5,9 @@ import {
   fetchTags,
   fetchAllCategories,
   fetchAllTags,
+  fetchCategoryById,
+  fetchTagsForPost,
+  rowToPostPublic,
   SUPPORTED_LOCALES,
 } from "../../lib/db.js";
 import { isAuthenticated, json, methodNotAllowed } from "../../lib/auth.js";
@@ -18,15 +21,30 @@ export async function handler(event) {
   }
 
   const params = event.queryStringParameters || {};
-  const rawLocale = (params.locale || "").toString().trim().toLowerCase();
-  // A diferencia de las funciones públicas, aquí "sin locale" significa
-  // "todos los idiomas", no "es" — el backoffice necesita ver/editar
-  // entradas de cualquier idioma a la vez.
-  const locale = SUPPORTED_LOCALES.includes(rawLocale) ? rawLocale : null;
+  const postId = (params.id || "").toString().trim();
 
   try {
     await ensureSchema();
     const db = getDb();
+
+    // Detalle de una única entrada (usado por el editor): aquí sí devolvemos
+    // body e image_data_url completos — una sola entrada nunca se acerca al
+    // límite de payload de las Netlify Functions.
+    if (postId) {
+      const result = await db.execute({ sql: `SELECT * FROM posts WHERE id = ? LIMIT 1`, args: [postId] });
+      const row = result.rows[0];
+      if (!row) return json(404, { error: "Entrada no encontrada" });
+      const post = rowToPostPublic(row);
+      post.category = await fetchCategoryById(row.category_id);
+      post.tags = await fetchTagsForPost(row.id);
+      return json(200, { post });
+    }
+
+    const rawLocale = (params.locale || "").toString().trim().toLowerCase();
+    // A diferencia de las funciones públicas, aquí "sin locale" significa
+    // "todos los idiomas", no "es" — el backoffice necesita ver/editar
+    // entradas de cualquier idioma a la vez.
+    const locale = SUPPORTED_LOCALES.includes(rawLocale) ? rawLocale : null;
 
     const where = [];
     const args = [];
@@ -36,8 +54,13 @@ export async function handler(event) {
     }
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
+    // Nota: NO seleccionamos body ni image_data_url en el listado a propósito.
+    // Con las 5 traducciones por entrada, decenas de posts con cuerpo completo
+    // + imágenes en base64 (>1 MB cada una) superarían con facilidad el
+    // límite de 6 MB de las Netlify Functions. El editor pide el detalle
+    // completo por separado vía ?id=... (rama de arriba) cuando hace falta.
     const result = await db.execute({
-      sql: `SELECT id, slug, title, excerpt, body, date_label, image_data_url, published, category_id, locale, created_at, updated_at
+      sql: `SELECT id, slug, title, excerpt, date_label, published, category_id, locale, created_at, updated_at
             FROM posts
             ${whereSql}
             ORDER BY datetime(updated_at) DESC, datetime(created_at) DESC`,
@@ -49,9 +72,8 @@ export async function handler(event) {
       slug: row.slug,
       title: row.title,
       excerpt: row.excerpt || "",
-      body: row.body || "",
       dateLabel: row.date_label,
-      imageDataUrl: row.image_data_url || "",
+      imageDataUrl: "",
       published: !!row.published,
       categoryId: row.category_id || null,
       locale: row.locale,

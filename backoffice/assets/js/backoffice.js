@@ -473,30 +473,13 @@
     if (e.key === "Escape" && !editorView.hidden) hideEditor();
   });
 
-  function openEditor(id) {
+  async function openEditor(id) {
     editorError.hidden = true;
     editorOk.hidden = true;
-    state.editing = id ? state.posts.find((p) => p.id === id) : null;
-    state.imageDataUrl = state.editing?.imageDataUrl || "";
 
-    if (localeSelect) {
-      localeSelect.value = (state.editing && state.editing.locale) || "es";
-    }
-    populateCategorySelect();
-    suggestTagsHint();
-
-    if (state.editing) {
-      editorTitle.textContent = "Editar entrada";
-      deleteBtn.hidden = false;
-      titleInput.value = state.editing.title || "";
-      slugInput.value = state.editing.slug || "";
-      $("#excerpt").value = state.editing.excerpt || "";
-      bodyInput.value = state.editing.body || "";
-      $("#dateLabel").value = esDateToIso(state.editing.dateLabel) || "";
-      publishedInput.checked = !!state.editing.published;
-      if (categorySelect) categorySelect.value = state.editing.categoryId || (state.editing.category && state.editing.category.id) || "";
-      setTagsFromString((state.editing.tags || []).map((t) => t.name).join(", "));
-    } else {
+    if (!id) {
+      state.editing = null;
+      state.imageDataUrl = "";
       editorTitle.textContent = "Nueva entrada";
       deleteBtn.hidden = true;
       editorForm.reset();
@@ -506,7 +489,50 @@
       publishedInput.checked = false;
       if (categorySelect) categorySelect.value = "";
       setTagsFromString("");
+      updateSlugPreview();
+      updatePublishedLabel();
+      updateDateLabelPreview();
+      updateImagePreview();
+      renderBodyPreview();
+      slugTouched = false;
+      showEditor();
+      return;
     }
+
+    // El listado ya no trae body/imagen (superarían el límite de payload de
+    // las Netlify Functions con varias decenas de entradas) — se piden aquí,
+    // al abrir el editor de una entrada concreta.
+    editorTitle.textContent = "Cargando…";
+    deleteBtn.hidden = false;
+    editorForm.reset();
+    showEditor();
+
+    let post;
+    try {
+      const data = await api(`/posts-list?id=${encodeURIComponent(id)}`);
+      post = data.post;
+    } catch (err) {
+      hideEditor();
+      toast(err.message || "No se pudo cargar la entrada", "error");
+      return;
+    }
+
+    state.editing = post;
+    state.imageDataUrl = post?.imageDataUrl || "";
+
+    if (localeSelect) localeSelect.value = post.locale || "es";
+    populateCategorySelect();
+    suggestTagsHint();
+
+    editorTitle.textContent = "Editar entrada";
+    titleInput.value = post.title || "";
+    slugInput.value = post.slug || "";
+    $("#excerpt").value = post.excerpt || "";
+    bodyInput.value = post.body || "";
+    $("#dateLabel").value = esDateToIso(post.dateLabel) || "";
+    publishedInput.checked = !!post.published;
+    if (categorySelect) categorySelect.value = post.categoryId || (post.category && post.category.id) || "";
+    setTagsFromString((post.tags || []).map((t) => t.name).join(", "));
 
     updateSlugPreview();
     updatePublishedLabel();
@@ -514,7 +540,6 @@
     updateImagePreview();
     renderBodyPreview();
     slugTouched = false;
-    showEditor();
   }
 
   function closeEditor() { hideEditor(); }
