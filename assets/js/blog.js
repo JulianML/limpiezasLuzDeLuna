@@ -126,6 +126,35 @@ function getStrings() {
   return BLOG_STRINGS[lang] || BLOG_STRINGS["es-ES"];
 }
 
+// Mapeo de document.documentElement.lang (p. ej. "en-GB") al código corto
+// de idioma que espera la API (p. ej. "en").
+const API_LOCALE_MAP = {
+  "es-ES": "es",
+  "en-GB": "en",
+  "fr-FR": "fr",
+  "de-DE": "de",
+  "ru-RU": "ru",
+};
+
+function getApiLocale() {
+  const lang = document.documentElement.lang || "es-ES";
+  return API_LOCALE_MAP[lang] || "es";
+}
+
+// Página de presupuesto/devis correcta según el idioma del sitio.
+const BUDGET_PAGE_MAP = {
+  "es-ES": "presupuesto.html",
+  "en-GB": "budget.html",
+  "fr-FR": "devis.html",
+  "de-DE": "budget.html",
+  "ru-RU": "budget.html",
+};
+
+function getBudgetPage() {
+  const lang = document.documentElement.lang || "es-ES";
+  return BUDGET_PAGE_MAP[lang] || "presupuesto.html";
+}
+
 function escapeHtml(s) {
   return String(s ?? "")
     .replace(/&/g, "&amp;")
@@ -391,6 +420,7 @@ async function loadList() {
   if (tocNav) tocNav.innerHTML = `<p class="blog-toc__empty">${S.tocLoading}</p>`;
 
   const params = new URLSearchParams();
+  params.set("locale", getApiLocale());
   if (filters.category) params.set("category", filters.category);
   if (filters.tag) params.set("tag", filters.tag);
   const qs = params.toString();
@@ -484,7 +514,7 @@ async function loadPost() {
   root.innerHTML = `<p class="blog-empty">${S.postLoading}</p>`;
 
   try {
-    const res = await fetch(`${API_BASE}/posts-get?slug=${encodeURIComponent(slug)}`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE}/posts-get?slug=${encodeURIComponent(slug)}&locale=${encodeURIComponent(getApiLocale())}`, { cache: "no-store" });
     if (res.status === 404) {
       root.innerHTML = `<p class="blog-empty">${S.postNotFound}</p>`;
       return;
@@ -512,7 +542,7 @@ async function loadPost() {
           <h3 class="post-cta__title">${escapeHtml(S.ctaTitle)}</h3>
           <p class="post-cta__text">${escapeHtml(S.ctaText)}</p>
         </div>
-        <a class="post-cta__btn" href="../presupuesto.html">
+        <a class="post-cta__btn" href="../${escapeHtml(getBudgetPage())}">
           ${escapeHtml(S.ctaButton)}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>

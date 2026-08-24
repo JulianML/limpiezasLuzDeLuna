@@ -1057,6 +1057,7 @@ h1, h2, h3, h4 { margin: 0; font-family: "DM Sans", sans-serif; letter-spacing: 
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  margin-left: 10px;
 }
 .lang-dropdown__toggle {
   display: inline-flex;
@@ -2476,8 +2477,34 @@ h1, h2, h3, h4 { margin: 0; font-family: "DM Sans", sans-serif; letter-spacing: 
 
 @media (max-width: 720px) {
   :root { --header-h: 68px; }
+  .site-header__inner { padding: 0 16px; }
+  .brand { gap: 10px; letter-spacing: 1px; }
   .nav-toggle { margin-left: auto; }
-  .lang-dropdown__toggle { padding: 6px 8px; }
+  .nav .lang-dropdown {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    margin: 10px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .nav .lang-dropdown__toggle { width: 100%; justify-content: space-between; padding: 12px 14px; }
+  /* En móvil el menú de idiomas se despliega inline (como el submenú de Servicios)
+     en vez de flotar en absoluto, para que no quede recortado por el scroll del panel. */
+  .nav .lang-dropdown__menu {
+    position: static;
+    display: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    min-width: 0;
+    margin: 6px 0 0;
+    padding: 0;
+  }
+  .nav .lang-dropdown.is-open .lang-dropdown__menu { display: flex; flex-direction: column; }
   .nav {
     position: absolute;
     top: var(--header-h);

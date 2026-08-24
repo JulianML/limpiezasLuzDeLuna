@@ -1,4 +1,12 @@
-import { ensureSchema, getDb, fetchCategories, fetchTags } from "../../lib/db.js";
+import {
+  ensureSchema,
+  getDb,
+  fetchCategories,
+  fetchTags,
+  fetchAllCategories,
+  fetchAllTags,
+  SUPPORTED_LOCALES,
+} from "../../lib/db.js";
 import { isAuthenticated, json, methodNotAllowed } from "../../lib/auth.js";
 
 export async function handler(event) {
@@ -9,15 +17,31 @@ export async function handler(event) {
     return json(401, { error: "No autenticado" });
   }
 
+  const params = event.queryStringParameters || {};
+  const rawLocale = (params.locale || "").toString().trim().toLowerCase();
+  // A diferencia de las funciones públicas, aquí "sin locale" significa
+  // "todos los idiomas", no "es" — el backoffice necesita ver/editar
+  // entradas de cualquier idioma a la vez.
+  const locale = SUPPORTED_LOCALES.includes(rawLocale) ? rawLocale : null;
+
   try {
     await ensureSchema();
     const db = getDb();
 
+    const where = [];
+    const args = [];
+    if (locale) {
+      where.push("locale = ?");
+      args.push(locale);
+    }
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
     const result = await db.execute({
-      sql: `SELECT id, slug, title, excerpt, body, date_label, image_data_url, published, category_id, created_at, updated_at
+      sql: `SELECT id, slug, title, excerpt, body, date_label, image_data_url, published, category_id, locale, created_at, updated_at
             FROM posts
+            ${whereSql}
             ORDER BY datetime(updated_at) DESC, datetime(created_at) DESC`,
-      args: [],
+      args,
     });
 
     const posts = result.rows.map((row) => ({
@@ -30,6 +54,7 @@ export async function handler(event) {
       imageDataUrl: row.image_data_url || "",
       published: !!row.published,
       categoryId: row.category_id || null,
+      locale: row.locale,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));
@@ -63,7 +88,9 @@ export async function handler(event) {
       }
     }
 
-    const [categories, tags] = await Promise.all([fetchCategories(), fetchTags()]);
+    const [categories, tags] = locale
+      ? await Promise.all([fetchCategories(locale), fetchTags(locale)])
+      : await Promise.all([fetchAllCategories(), fetchAllTags()]);
 
     return json(200, { posts, categories, tags });
   } catch (err) {

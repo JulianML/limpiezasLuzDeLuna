@@ -2,10 +2,12 @@
 (() => {
   document.documentElement.classList.add('js-ready');
 
-  // Selector de idioma (dropdown) en el header, construido a partir del footer
-  const headerInner = document.querySelector('.site-header__inner');
+  // Selector de idioma (dropdown), construido a partir del footer.
+  // Vive dentro de .nav: en escritorio aparece al final de la barra de navegación;
+  // en móvil queda integrado en el panel del menú hamburguesa (hay sitio de sobra).
+  const navEl = document.querySelector('.nav');
   const footerSwitch = document.querySelector('footer .lang-switch');
-  if (headerInner && footerSwitch) {
+  if (navEl && footerSwitch) {
     const links = Array.from(footerSwitch.querySelectorAll('a'));
     const languages = links.map(a => ({
       href: a.getAttribute('href'),
@@ -63,7 +65,7 @@
 
     dropdown.appendChild(toggle);
     dropdown.appendChild(menu);
-    headerInner.appendChild(dropdown);
+    navEl.appendChild(dropdown);
 
     toggle.addEventListener('click', (e) => {
       e.stopPropagation();

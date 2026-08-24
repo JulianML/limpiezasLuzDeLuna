@@ -5,6 +5,7 @@ import {
   fetchCategoryById,
   fetchTagsForPost,
   slugifyTagSlug,
+  normalizeLocale,
 } from "../../lib/db.js";
 import { isAuthenticated, json, methodNotAllowed } from "../../lib/auth.js";
 
@@ -33,7 +34,7 @@ function parseTagsPayload(v) {
   return [];
 }
 
-async function upsertTagsByNames(db, names) {
+async function upsertTagsByNames(db, names, locale) {
   const tags = [];
   for (const raw of names) {
     const name = String(raw).trim().slice(0, 60);
@@ -41,16 +42,16 @@ async function upsertTagsByNames(db, names) {
     const slug = slugifyTagSlug(name);
     if (!slug) continue;
     const existing = await db.execute({
-      sql: `SELECT id, slug, name FROM tags WHERE slug = ? LIMIT 1`,
-      args: [slug],
+      sql: `SELECT id, slug, name FROM tags WHERE slug = ? AND locale = ? LIMIT 1`,
+      args: [slug, locale],
     });
     if (existing.rows.length) {
       tags.push(existing.rows[0]);
     } else {
       const id = `tag-${randomSlug()}`;
       await db.execute({
-        sql: `INSERT INTO tags (id, slug, name) VALUES (?, ?, ?)`,
-        args: [id, slug, name],
+        sql: `INSERT INTO tags (id, slug, name, locale) VALUES (?, ?, ?, ?)`,
+        args: [id, slug, name, locale],
       });
       tags.push({ id, slug, name });
     }
@@ -120,6 +121,7 @@ export async function handler(event) {
   const imageDataUrl = pickString(body.imageDataUrl, 4000000);
   const published = body.published ? 1 : 0;
   const categoryId = pickString(body.categoryId, 60).trim() || null;
+  const locale = normalizeLocale(body.locale);
 
   try {
     await ensureSchema();
@@ -132,10 +134,10 @@ export async function handler(event) {
     if (!current.rows.length) return json(404, { error: "Entrada no encontrada" });
 
     const dup = await db.execute({
-      sql: `SELECT id FROM posts WHERE slug = ? AND id != ? LIMIT 1`,
-      args: [slug, id],
+      sql: `SELECT id FROM posts WHERE slug = ? AND locale = ? AND id != ? LIMIT 1`,
+      args: [slug, locale, id],
     });
-    if (dup.rows.length) return json(409, { error: "Ya existe otra entrada con ese slug" });
+    if (dup.rows.length) return json(409, { error: "Ya existe otra entrada con ese slug para ese idioma" });
 
     if (categoryId) {
       const cat = await db.execute({
@@ -147,14 +149,14 @@ export async function handler(event) {
 
     await db.execute({
       sql: `UPDATE posts
-            SET slug = ?, title = ?, excerpt = ?, body = ?, date_label = ?, image_data_url = ?, published = ?, category_id = ?, updated_at = datetime('now')
+            SET slug = ?, title = ?, excerpt = ?, body = ?, date_label = ?, image_data_url = ?, published = ?, category_id = ?, locale = ?, updated_at = datetime('now')
             WHERE id = ?`,
-      args: [slug, title, excerpt, bodyMd, dateLabel, imageDataUrl, published, categoryId, id],
+      args: [slug, title, excerpt, bodyMd, dateLabel, imageDataUrl, published, categoryId, locale, id],
     });
 
     if (Array.isArray(body.tags) || typeof body.tags === "string") {
       const tagNames = parseTagsPayload(body.tags);
-      const tags = await upsertTagsByNames(db, tagNames);
+      const tags = await upsertTagsByNames(db, tagNames, locale);
       await attachTags(db, id, tags.map((t) => t.id));
     }
 

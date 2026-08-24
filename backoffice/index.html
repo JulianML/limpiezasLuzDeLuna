@@ -704,6 +704,26 @@ textarea { resize: vertical; min-height: 120px; font-family: inherit; }
   align-self: flex-start;
   border: 1px solid var(--border);
 }
+.post-row__slugrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+.post-row__slugrow .post-row__slug { margin: 0; }
+.post-row__locale {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  border: 1px solid rgba(200, 153, 104, .3);
+  display: inline-block;
+}
 .post-row__excerpt {
   font-size: 13.5px;
   color: var(--ink-soft);
@@ -1389,12 +1409,26 @@ textarea { resize: vertical; min-height: 120px; font-family: inherit; }
 
       <div class="editor__row editor__row--two">
         <div class="field">
+          <label for="locale">Idioma <span class="req">*</span></label>
+          <select id="locale" name="locale">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="ru">Русский</option>
+          </select>
+          <small>El idioma de esta entrada. La misma slug puede repetirse en otro idioma.</small>
+        </div>
+        <div class="field">
           <label for="categoryId">Categoría</label>
           <select id="categoryId" name="categoryId">
             <option value="">— Sin categoría —</option>
           </select>
           <small>Una sola por entrada. Define el TOC y la navegación principal.</small>
         </div>
+      </div>
+
+      <div class="editor__row">
         <div class="field">
           <label for="tagsInput">Tags</label>
           <div class="tags-input">

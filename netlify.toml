@@ -40,6 +40,34 @@
   query = {slug = ":slug"}
   force = true
 
+[[redirects]]
+  from = "/en/blog/post/:slug"
+  to = "/en/blog/post"
+  status = 200
+  query = {slug = ":slug"}
+  force = true
+
+[[redirects]]
+  from = "/fr/blog/post/:slug"
+  to = "/fr/blog/post"
+  status = 200
+  query = {slug = ":slug"}
+  force = true
+
+[[redirects]]
+  from = "/de/blog/post/:slug"
+  to = "/de/blog/post"
+  status = 200
+  query = {slug = ":slug"}
+  force = true
+
+[[redirects]]
+  from = "/ru/blog/post/:slug"
+  to = "/ru/blog/post"
+  status = 200
+  query = {slug = ":slug"}
+  force = true
+
 # Cinturón y tirantes: aunque el build ya excluye estos archivos,
 # bloqueamos cualquier ruta que intente acceder a ficheros sensibles
 # (.env, package.json, lib/, scripts/, node_modules/, git, etc.).

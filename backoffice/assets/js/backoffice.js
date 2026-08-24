@@ -94,6 +94,9 @@
     }, 3200);
   }
 
+  const SUPPORTED_LOCALES = ["es", "en", "fr", "de", "ru"];
+  const LOCALE_LABELS = { es: "ES", en: "EN", fr: "FR", de: "DE", ru: "RU" };
+
   const state = {
     posts: [],
     categories: [],
@@ -243,6 +246,11 @@
     return `<span class="post-row__category post-row__category--empty">Sin categoría</span>`;
   }
 
+  function localeBadge(post) {
+    const code = String(post.locale || "es").toLowerCase();
+    return `<span class="post-row__locale">${escapeHtml(LOCALE_LABELS[code] || code.toUpperCase())}</span>`;
+  }
+
   function tagsBadges(post) {
     if (!post.tags || !post.tags.length) return "";
     return `<div class="post-row__tags">${post.tags
@@ -289,7 +297,10 @@
           <div class="post-row__body">
             <p class="post-row__meta">${escapeHtml(p.dateLabel || "Sin fecha")} · ${escapeHtml(formatDate(p.updatedAt || p.createdAt))}</p>
             <h3 class="post-row__title">${escapeHtml(p.title)}</h3>
-            <p class="post-row__slug">${escapeHtml(p.slug)}</p>
+            <div class="post-row__slugrow">
+              <p class="post-row__slug">${escapeHtml(p.slug)}</p>
+              ${localeBadge(p)}
+            </div>
             <div class="post-row__cattags">
               ${categoryBadge(p)}
               ${tagsBadges(p)}
@@ -341,13 +352,33 @@
   const publishedInput = $("#published");
   const publishedLabel = $("#publishedLabel");
   const categorySelect = $("#categoryId");
+  const localeSelect = $("#locale");
   const tagsInput = $("#tagsInput");
 
-  function populateCategorySelect() {
+  function currentLocale() {
+    return localeSelect ? (localeSelect.value || "es") : "es";
+  }
+
+  // Solo muestra en el <select> las categorías del idioma actualmente
+  // seleccionado en el editor — cada categoría existe una vez por idioma,
+  // con id distinto, así que hay que refiltrar cada vez que cambia el idioma.
+  function populateCategorySelect(preserveSelection) {
     if (!categorySelect) return;
-    const cats = state.categories.slice().sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    const previous = preserveSelection ? categorySelect.value : "";
+    const locale = currentLocale();
+    const cats = state.categories
+      .filter((c) => (c.locale || "es") === locale)
+      .slice()
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     categorySelect.innerHTML = `<option value="">— Sin categoría —</option>` +
       cats.map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join("");
+    if (preserveSelection && cats.some((c) => c.id === previous)) {
+      categorySelect.value = previous;
+    }
+  }
+
+  if (localeSelect) {
+    localeSelect.addEventListener("change", () => populateCategorySelect(false));
   }
 
   const tagsChips = $("#tagsChips");
@@ -400,7 +431,9 @@
       tagsSuggestions.innerHTML = "";
       return;
     }
+    const locale = currentLocale();
     const available = state.tags.filter((t) => {
+      if ((t.locale || "es") !== locale) return false;
       if (normalizeTagName(t.name) === q) return false;
       if (draftTags.some((d) => normalizeTagName(d.name) === normalizeTagName(t.name))) return false;
       return normalizeTagName(t.name).includes(q);
@@ -446,6 +479,9 @@
     state.editing = id ? state.posts.find((p) => p.id === id) : null;
     state.imageDataUrl = state.editing?.imageDataUrl || "";
 
+    if (localeSelect) {
+      localeSelect.value = (state.editing && state.editing.locale) || "es";
+    }
     populateCategorySelect();
     suggestTagsHint();
 
@@ -464,6 +500,8 @@
       editorTitle.textContent = "Nueva entrada";
       deleteBtn.hidden = true;
       editorForm.reset();
+      if (localeSelect) localeSelect.value = "es";
+      populateCategorySelect();
       $("#dateLabel").value = todayIso();
       publishedInput.checked = false;
       if (categorySelect) categorySelect.value = "";
@@ -668,6 +706,7 @@
       imageDataUrl: state.imageDataUrl,
       published: !!publishedInput.checked,
       categoryId: categorySelect ? categorySelect.value || null : null,
+      locale: currentLocale(),
       tags: tagsArr,
     };
 

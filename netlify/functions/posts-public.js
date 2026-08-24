@@ -1,4 +1,4 @@
-import { ensureSchema, getDb, fetchCategories } from "../../lib/db.js";
+import { ensureSchema, getDb, fetchCategories, normalizeLocale } from "../../lib/db.js";
 import { json, methodNotAllowed } from "../../lib/auth.js";
 
 export async function handler(event) {
@@ -7,6 +7,7 @@ export async function handler(event) {
   }
 
   const params = event.queryStringParameters || {};
+  const locale = normalizeLocale(params.locale);
   const categorySlug = (params.category || "").toString().trim();
   const tagSlug = (params.tag || "").toString().trim();
   const search = (params.q || "").toString().trim();
@@ -15,8 +16,8 @@ export async function handler(event) {
     await ensureSchema();
     const db = getDb();
 
-    const where = ["p.published = 1"];
-    const args = [];
+    const where = ["p.published = 1", "p.locale = ?"];
+    const args = [locale];
 
     if (categorySlug) {
       where.push("c.slug = ?");
@@ -26,9 +27,9 @@ export async function handler(event) {
       where.push(`p.id IN (
         SELECT pt.post_id FROM post_tags pt
         INNER JOIN tags t ON t.id = pt.tag_id
-        WHERE t.slug = ?
+        WHERE t.slug = ? AND t.locale = ?
       )`);
-      args.push(tagSlug);
+      args.push(tagSlug, locale);
     }
     if (search) {
       where.push("(p.title LIKE ? OR p.excerpt LIKE ?)");
@@ -37,7 +38,7 @@ export async function handler(event) {
 
     const sql = `
       SELECT p.id, p.slug, p.title, p.excerpt, p.date_label, p.image_data_url,
-             p.published, p.category_id, p.created_at, p.updated_at,
+             p.published, p.category_id, p.locale, p.created_at, p.updated_at,
              c.slug AS category_slug, c.name AS category_name
       FROM posts p
       LEFT JOIN categories c ON c.id = p.category_id
@@ -55,6 +56,7 @@ export async function handler(event) {
       imageDataUrl: row.image_data_url || "",
       published: !!row.published,
       categoryId: row.category_id || null,
+      locale: row.locale,
       category: row.category_slug
         ? { id: row.category_id, slug: row.category_slug, name: row.category_name }
         : null,
@@ -85,7 +87,7 @@ export async function handler(event) {
       }
     }
 
-    const categories = await fetchCategories();
+    const categories = await fetchCategories(locale);
 
     return json(200, { posts, categories });
   } catch (err) {

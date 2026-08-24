@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 /**
- * Render — genera HTML estático por cada entrada publicada del blog.
+ * Render — genera HTML estático por cada entrada publicada del blog,
+ * para cada idioma soportado (es, en, fr, de, ru).
  *
- * Para cada post `published = 1` con slug `x`, produce
- *   _site/blog/post/x/index.html
- * tomando como plantilla `blog/post.html`, sustituyendo
+ * Para cada post `published = 1` con slug `x` y locale `L`, produce
+ *   _site/<L>/blog/post/x/index.html   (o _site/blog/post/x/index.html si L = es)
+ * tomando como plantilla `<L>/blog/post.html`, sustituyendo
  * `#postRoot` y `#postTocList` por el contenido real
  * y rellenando <title>, meta description y OG tags.
+ *
+ * Nota: el redirect dinámico de netlify.toml (`force = true`) hace que en
+ * producción este HTML pre-renderizado nunca se sirva realmente — el blog
+ * siempre se pinta en cliente vía blog.js. Este script es solo un "nice to
+ * have" de consistencia (SEO/fallback sin JS), no una ruta crítica.
  *
  * Si no hay variables TURSO_DATABASE_URL / TURSO_AUTH_TOKEN en el entorno
  * (p. ej. CI sin secretos), se omite silenciosamente.
@@ -18,10 +24,59 @@ import { fileURLToPath } from "node:url";
 import { createClient } from "@libsql/client";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const TEMPLATE_PATH = join(ROOT, "blog", "post.html");
-const OUTPUT_BASE = join(ROOT, "_site", "blog", "post");
 
 const MONTHS_ES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+// Un locale por carpeta de idioma (raíz = español). Cada uno tiene su propia
+// plantilla `*/blog/post.html`, su página de presupuesto/devis y sus textos
+// fijos (CTA, "volver al blog", etc.).
+const LOCALES = [
+  { code: "es", dir: "" },
+  { code: "en", dir: "en" },
+  { code: "fr", dir: "fr" },
+  { code: "de", dir: "de" },
+  { code: "ru", dir: "ru" },
+];
+
+const BUDGET_PAGE = { es: "presupuesto.html", en: "budget.html", fr: "devis.html", de: "budget.html", ru: "budget.html" };
+
+const STRINGS = {
+  es: {
+    ctaTitle: "¿Necesitas limpiar tus cristales?",
+    ctaText: "Te pasamos presupuesto sin compromiso en menos de 24 h. Más de 30 años limpiando cristales en la Costa Blanca.",
+    ctaButton: "Más información",
+    backToBlog: "← Volver al blog",
+    emptySections: "Esta entrada no tiene secciones.",
+  },
+  en: {
+    ctaTitle: "Need to clean your windows?",
+    ctaText: "Get a no-obligation quote within 24 h. 30+ years cleaning windows on the Costa Blanca.",
+    ctaButton: "More info",
+    backToBlog: "← Back to the blog",
+    emptySections: "This post has no sections.",
+  },
+  fr: {
+    ctaTitle: "Besoin de nettoyer vos vitres ?",
+    ctaText: "Devis gratuit sous 24 h. Plus de 30 ans à nettoyer les vitres sur la Costa Blanca.",
+    ctaButton: "Plus d'infos",
+    backToBlog: "← Retour au blog",
+    emptySections: "Cet article n'a pas de sections.",
+  },
+  de: {
+    ctaTitle: "Fenster müssen gereinigt werden?",
+    ctaText: "Kostenloses Angebot innerhalb von 24 h. Über 30 Jahre Erfahrung an der Costa Blanca.",
+    ctaButton: "Mehr Info",
+    backToBlog: "← Zurück zum Blog",
+    emptySections: "Dieser Beitrag enthält keine Abschnitte.",
+  },
+  ru: {
+    ctaTitle: "Нужно помыть стёкла?",
+    ctaText: "Бесплатный расчёт за 24 ч. Более 30 лет моем стёкла на Коста-Бланке.",
+    ctaButton: "Подробнее",
+    backToBlog: "← Вернуться в блог",
+    emptySections: "У этой статьи нет разделов.",
+  },
+};
 
 function escapeHtml(s) {
   return String(s ?? "")
@@ -75,7 +130,8 @@ function markdownToHtml(text) {
   return out.join("\n");
 }
 
-function buildPostTocHtml(bodyMd) {
+function buildPostTocHtml(bodyMd, locale) {
+  const S = STRINGS[locale] || STRINGS.es;
   const headings = [];
   const lines = String(bodyMd || "").split(/\r?\n/);
   for (const raw of lines) {
@@ -87,7 +143,7 @@ function buildPostTocHtml(bodyMd) {
   }
 
   if (!headings.length) {
-    return `<p class="blog-toc__empty">Esta entrada no tiene secciones.</p>`;
+    return `<p class="blog-toc__empty">${escapeHtml(S.emptySections)}</p>`;
   }
 
   const h2s = headings.filter((h) => h.level === 2);
@@ -106,7 +162,9 @@ function buildPostTocHtml(bodyMd) {
   }).join("");
 }
 
-function buildPostBodyHtml(post) {
+function buildPostBodyHtml(post, locale) {
+  const S = STRINGS[locale] || STRINGS.es;
+  const budgetPage = BUDGET_PAGE[locale] || BUDGET_PAGE.es;
   const parts = [];
   if (post.dateLabel) {
     parts.push(`<p class="post-page__meta">${escapeHtml(post.dateLabel)}</p>`);
@@ -130,43 +188,48 @@ function buildPostBodyHtml(post) {
 
   parts.push(`<aside class="post-cta">
         <div class="post-cta__body">
-          <h3 class="post-cta__title">¿Necesitas limpiar tus cristales?</h3>
-          <p class="post-cta__text">Te pasamos presupuesto sin compromiso en menos de 24 h. Más de 30 años limpiando cristales en la Costa Blanca.</p>
+          <h3 class="post-cta__title">${escapeHtml(S.ctaTitle)}</h3>
+          <p class="post-cta__text">${escapeHtml(S.ctaText)}</p>
         </div>
-        <a class="post-cta__btn" href="../../presupuesto.html">
-          Más información
+        <a class="post-cta__btn" href="../../../${escapeHtml(budgetPage)}">
+          ${escapeHtml(S.ctaButton)}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
       </aside>`);
 
-  parts.push(`<a class="post-page__back" href="../../index.html">← Volver al blog</a>`);
+  parts.push(`<a class="post-page__back" href="../../index.html">${escapeHtml(S.backToBlog)}</a>`);
   return parts.join("\n");
 }
 
-function buildAbsoluteUrls(post, origin) {
+function buildAbsoluteUrls(post, origin, dir) {
+  const path = dir ? `${dir}/blog/post/${post.slug}/` : `blog/post/${post.slug}/`;
   return {
-    canonical: `${origin}/blog/post/${post.slug}/`,
-    og: `${origin}/blog/post/${post.slug}/`,
+    canonical: `${origin}/${path}`,
+    og: `${origin}/${path}`,
     image: post.imageDataUrl || `${origin}/assets/img/og-default.webp`,
   };
 }
 
-function renderHtml(template, post) {
+function renderHtml(template, post, locale, dir) {
   const siteOrigin = process.env.SITE_URL || "https://limpiezasluzdeluna.com";
-  const urls = buildAbsoluteUrls(post, siteOrigin.replace(/\/$/, ""));
+  const urls = buildAbsoluteUrls(post, siteOrigin.replace(/\/$/, ""), dir);
   const description = truncate(post.excerpt || "", 160);
-  const bodyHtml = buildPostBodyHtml(post);
-  const tocHtml = buildPostTocHtml(post.body);
+  const bodyHtml = buildPostBodyHtml(post, locale);
+  const tocHtml = buildPostTocHtml(post.body, locale);
   const safeTitle = `${escapeHtml(post.title)} · Blog Limpiezas Luz de Luna`;
 
   let out = template;
 
+  // Los templates de cada idioma no siempre son consistentes en cuántos
+  // "../" anteponen a assets/ (depende de si el archivo referenciado vive
+  // a una o dos carpetas de profundidad respecto a la plantilla). Aceptamos
+  // cualquier número de "../" para no depender de esa convención.
   out = out
-    .replace(/href="\.\.\/assets\/img\/favicon\.webp"/g, 'href="/assets/img/favicon.webp"')
-    .replace(/src="\.\.\/assets\/img\/flags\//g, 'src="/assets/img/flags/')
-    .replace(/href="\.\.\/assets\/css\/styles\.css"/g, 'href="/assets/css/styles.css"')
-    .replace(/src="\.\.\/assets\/js\/main\.js"/g, 'src="/assets/js/main.js"')
-    .replace(/src="\.\.\/assets\/js\/blog\.js"/g, 'src="/assets/js/blog.js"');
+    .replace(/href="(?:\.\.\/)+assets\/img\/favicon\.webp"/g, 'href="/assets/img/favicon.webp"')
+    .replace(/src="(?:\.\.\/)+assets\/img\/flags\//g, 'src="/assets/img/flags/')
+    .replace(/href="(?:\.\.\/)+assets\/css\/styles\.css"/g, 'href="/assets/css/styles.css"')
+    .replace(/src="(?:\.\.\/)+assets\/js\/main\.js"/g, 'src="/assets/js/main.js"')
+    .replace(/src="(?:\.\.\/)+assets\/js\/blog\.js"/g, 'src="/assets/js/blog.js"');
 
   out = out.replace(/<title>[^<]*<\/title>/, `<title>${safeTitle}</title>`);
   out = out.replace(/<meta\s+name="description"[^>]*>/, `<meta name="description" content="${escapeHtml(description)}">`);
@@ -216,19 +279,16 @@ async function main() {
     console.warn("[render-posts] Sin TURSO_DATABASE_URL/TURSO_AUTH_TOKEN — se omite el pre-renderizado.");
     return;
   }
-  if (!existsSync(TEMPLATE_PATH)) {
-    console.warn(`[render-posts] No existe la plantilla ${TEMPLATE_PATH}`);
-    return;
-  }
 
-  const template = readFileSync(TEMPLATE_PATH, "utf-8");
   const client = createClient({ url, authToken: token });
 
-  // Detección defensiva: si la BD aún no tiene category_id ni las tablas nuevas,
-  // salimos silenciosamente. El cliente debe correr `npm run init:db -- --seed`
-  // (o `turso db shell ... < scripts/seed.sql`) antes del primer build.
+  // Detección defensiva: si la BD aún no tiene category_id/locale ni las
+  // tablas nuevas, salimos silenciosamente. El cliente debe correr
+  // `npm run init:db -- --seed` (o `turso db shell ... < scripts/seed.sql`)
+  // antes del primer build.
   const cols = await client.execute(`PRAGMA table_info(posts)`);
   const hasCategory = cols.rows.some((r) => r.name === "category_id");
+  const hasLocale = cols.rows.some((r) => r.name === "locale");
   const tablesResult = await client.execute(`SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('categories', 'tags', 'post_tags')`);
   const tableNames = new Set(tablesResult.rows.map((r) => r.name));
   if (!hasCategory || !tableNames.has("categories") || !tableNames.has("tags") || !tableNames.has("post_tags")) {
@@ -236,13 +296,8 @@ async function main() {
     return;
   }
 
-  const result = await client.execute({
-    sql: `SELECT id, slug, title, excerpt, body, date_label, image_data_url, published, category_id, created_at, updated_at
-          FROM posts WHERE published = 1
-          ORDER BY datetime(updated_at) DESC, datetime(created_at) DESC`,
-    args: [],
-  });
-
+  // Categorías y tags no se filtran por idioma aquí: los ids son únicos
+  // globalmente y cada post solo referencia los de su propio locale.
   const categoriesResult = await client.execute({
     sql: `SELECT id, slug, name FROM categories`,
     args: [],
@@ -263,35 +318,65 @@ async function main() {
     tagsByPost.set(row.post_id, list);
   }
 
-  if (existsSync(OUTPUT_BASE)) rmSync(OUTPUT_BASE, { recursive: true, force: true });
-  mkdirSync(OUTPUT_BASE, { recursive: true });
+  let totalCount = 0;
 
-  let count = 0;
-  for (const row of result.rows) {
-    const post = {
-      id: row.id,
-      slug: row.slug,
-      title: row.title,
-      excerpt: row.excerpt || "",
-      body: row.body || "",
-      dateLabel: row.date_label,
-      imageDataUrl: row.image_data_url || "",
-      published: !!row.published,
-      categoryId: row.category_id || null,
-      category: row.category_id ? (categoriesById.get(row.category_id) || null) : null,
-      tags: tagsByPost.get(row.id) || [],
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    };
+  for (const { code, dir } of LOCALES) {
+    const templatePath = join(ROOT, dir, "blog", "post.html");
+    const outputBase = join(ROOT, "_site", dir, "blog", "post");
 
-    const html = renderHtml(template, post);
-    const dir = join(OUTPUT_BASE, post.slug);
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, "index.html"), html, "utf-8");
-    count++;
+    if (!existsSync(templatePath)) {
+      console.warn(`[render-posts] (${code}) No existe la plantilla ${templatePath}, se omite este idioma.`);
+      continue;
+    }
+
+    const template = readFileSync(templatePath, "utf-8");
+
+    // Si la columna locale todavía no existe (BD no migrada), tratamos todo
+    // el contenido como español y solo renderizamos ese idioma.
+    const sql = hasLocale
+      ? `SELECT id, slug, title, excerpt, body, date_label, image_data_url, published, category_id, created_at, updated_at
+         FROM posts WHERE published = 1 AND locale = ?
+         ORDER BY datetime(updated_at) DESC, datetime(created_at) DESC`
+      : `SELECT id, slug, title, excerpt, body, date_label, image_data_url, published, category_id, created_at, updated_at
+         FROM posts WHERE published = 1
+         ORDER BY datetime(updated_at) DESC, datetime(created_at) DESC`;
+    if (!hasLocale && code !== "es") continue;
+
+    const result = await client.execute({ sql, args: hasLocale ? [code] : [] });
+
+    if (existsSync(outputBase)) rmSync(outputBase, { recursive: true, force: true });
+    mkdirSync(outputBase, { recursive: true });
+
+    let count = 0;
+    for (const row of result.rows) {
+      const post = {
+        id: row.id,
+        slug: row.slug,
+        title: row.title,
+        excerpt: row.excerpt || "",
+        body: row.body || "",
+        dateLabel: row.date_label,
+        imageDataUrl: row.image_data_url || "",
+        published: !!row.published,
+        categoryId: row.category_id || null,
+        category: row.category_id ? (categoriesById.get(row.category_id) || null) : null,
+        tags: tagsByPost.get(row.id) || [],
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
+
+      const html = renderHtml(template, post, code, dir);
+      const postDir = join(outputBase, post.slug);
+      mkdirSync(postDir, { recursive: true });
+      writeFileSync(join(postDir, "index.html"), html, "utf-8");
+      count++;
+    }
+
+    totalCount += count;
+    console.log(`✓ render-posts (${code}): ${count} entrada${count === 1 ? "" : "s"} pre-renderizada${count === 1 ? "" : "s"} en _site/${dir ? dir + "/" : ""}blog/post/`);
   }
 
-  console.log(`✓ render-posts: ${count} entrada${count === 1 ? "" : "s"} pre-renderizada${count === 1 ? "" : "s"} en _site/blog/post/`);
+  console.log(`✓ render-posts: ${totalCount} entrada${totalCount === 1 ? "" : "s"} en total.`);
 }
 
 main().catch((err) => {
