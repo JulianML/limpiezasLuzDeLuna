@@ -24,7 +24,7 @@ const BLOG_STRINGS = {
     filterAll: "Todas",
     filterClear: "Quitar filtro",
     ctaTitle: "¿Necesitas limpiar tus cristales?",
-    ctaText: "Te pasamos presupuesto sin compromiso en menos de 24 h. Más de 30 años limpiando cristales en la Costa Blanca.",
+    ctaText: "Te pasamos presupuesto sin compromiso en menos de 24 h. Más de 35 años limpiando cristales en la Costa Blanca.",
     ctaButton: "Más información",
   },
   "en-GB": {
@@ -47,7 +47,7 @@ const BLOG_STRINGS = {
     filterAll: "All",
     filterClear: "Clear filter",
     ctaTitle: "Need to clean your windows?",
-    ctaText: "Get a no-obligation quote within 24 h. 30+ years cleaning windows on the Costa Blanca.",
+    ctaText: "Get a no-obligation quote within 24 h. 35+ years cleaning windows on the Costa Blanca.",
     ctaButton: "More info",
   },
   "fr-FR": {
@@ -70,7 +70,7 @@ const BLOG_STRINGS = {
     filterAll: "Toutes",
     filterClear: "Réinitialiser",
     ctaTitle: "Besoin de nettoyer vos vitres\u00a0?",
-    ctaText: "Devis gratuit sous 24 h. Plus de 30 ans à nettoyer les vitres sur la Costa Blanca.",
+    ctaText: "Devis gratuit sous 24 h. Plus de 35 ans à nettoyer les vitres sur la Costa Blanca.",
     ctaButton: "Plus d'infos",
   },
   "ru-RU": {
@@ -93,7 +93,7 @@ const BLOG_STRINGS = {
     filterAll: "Все",
     filterClear: "Сбросить",
     ctaTitle: "Нужно помыть стёкла?",
-    ctaText: "Бесплатный расчёт за 24 ч. Более 30 лет моем стёкла на Коста-Бланке.",
+    ctaText: "Бесплатный расчёт за 24 ч. Более 35 лет моем стёкла на Коста-Бланке.",
     ctaButton: "Подробнее",
   },
   "de-DE": {
@@ -116,7 +116,7 @@ const BLOG_STRINGS = {
     filterAll: "Alle",
     filterClear: "Filter löschen",
     ctaTitle: "Fenster müssen gereinigt werden?",
-    ctaText: "Kostenloses Angebot innerhalb von 24 h. Über 30 Jahre Erfahrung an der Costa Blanca.",
+    ctaText: "Kostenloses Angebot innerhalb von 24 h. Über 35 Jahre Erfahrung an der Costa Blanca.",
     ctaButton: "Mehr Info",
   },
 };

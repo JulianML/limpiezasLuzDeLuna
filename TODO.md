@@ -25,4 +25,5 @@
 
 ## nosotros.html
 - B11 menciona "Foto Sugerida: Una foto del equipo uniformado frente a un rascacielos o con sus vehículos rotulados para humanizar la marca." — el cliente confirma (2026-08-22) que de momento NO la va a facilitar porque el personal cambia con frecuencia. Queda descartada hasta nuevo aviso; no usar fotos de stock ni inventadas como sustituto.
-- Inconsistencia del "30 años" ya resuelta: se ha unificado en todo el sitio (todos los idiomas) al formato "+30 años" / "+30 years" / "+30 ans" / "+30 Jahre" / "+30 лет", salvo en las frases narrativas de la página "Nosotros" ("Hoy, 30 años después...") que se dejan literales porque se refieren a la fecha de fundación (1996), no a una cifra de marketing.
+- Inconsistencia del "30 años" ya resuelta: se ha unificado en todo el sitio (todos los idiomas) al formato "+35 años" / "+35 years" / "+35 ans" / "+35 Jahre" / "+35 лет", salvo en las frases narrativas de la página "Nosotros" ("Hoy, 35 años después...") que se dejan literales porque se refieren a la fecha de fundación.
+- Actualización (2026-08-25): se sube la cifra de "+30" a "+35 años" en todo el sitio (todos los idiomas). Para que cuadre con la frase narrativa de "Nosotros" ("Hoy, 35 años después..."), se ajusta también el año de fundación mencionado ahí de 1996 a 1988.

@@ -2,7 +2,7 @@
 // de Benidorm" (slug: tecnicas-rappel-benidorm) porque su contenido (nudos, arneses EN
 // 12841, descensos a 80m) contradice el servicio real de la empresa (pértiga/plataformas
 // hasta 20m, sin descolgamientos) y usa una cifra de experiencia distinta ("15 años" en
-// vez de "+30 años").
+// vez de "+35 años").
 //
 // No borra el post, solo lo oculta (published = 0), así se puede reeditar o volver a
 // publicar más adelante desde el backoffice.
