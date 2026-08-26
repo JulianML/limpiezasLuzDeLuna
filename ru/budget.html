@@ -57,7 +57,9 @@
       <p>Мы рассматриваем каждый случай индивидуально и отправляем фиксированную, подробную смету без сюрпризов. Также вы можете позвонить нам напрямую по <a href="tel:+34670341997"><strong>+34 670 341 997</strong></a> или написать в <a href="https://wa.me/34670341997" target="_blank" rel="noopener">WhatsApp</a>.</p>
     </div>
 
-    <form id="budgetForm" class="budget-form" novalidate>
+    <form id="budgetForm" class="budget-form" novalidate action="/.netlify/functions/send-contact" method="POST">
+      <input type="hidden" name="_subject" value="Новый запрос сметы — Web (RU)">
+      <input type="text" name="_gotcha" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
       <div class="form-row">
         <div class="form-field">
           <label for="nombre">Имя *</label>

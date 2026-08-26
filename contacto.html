@@ -95,7 +95,9 @@
 
     <section class="content-section">
       <h2>Cuéntanos qué necesitas y recibe tu presupuesto en menos de 24h</h2>
-      <form id="contactForm" class="budget-form" novalidate>
+      <form id="contactForm" class="budget-form" novalidate action="/.netlify/functions/send-contact" method="POST">
+        <input type="hidden" name="_subject" value="Nuevo mensaje de contacto — Web (ES)">
+        <input type="text" name="_gotcha" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="form-row">
           <div class="form-field">
             <label for="nombre">Nombre / Empresa</label>

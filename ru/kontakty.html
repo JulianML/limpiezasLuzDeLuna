@@ -95,7 +95,9 @@
 
     <section class="content-section">
       <h2>Расскажите, что вам нужно, и получите смету менее чем за 24 часа</h2>
-      <form id="contactForm" class="budget-form" novalidate>
+      <form id="contactForm" class="budget-form" novalidate action="/.netlify/functions/send-contact" method="POST">
+        <input type="hidden" name="_subject" value="Новое сообщение с сайта — Web (RU)">
+        <input type="text" name="_gotcha" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="form-row">
           <div class="form-field">
             <label for="nombre">Имя / Компания</label>

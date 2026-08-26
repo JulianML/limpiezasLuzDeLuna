@@ -2239,6 +2239,7 @@ h1, h2, h3, h4 { margin: 0; font-family: "DM Sans", sans-serif; letter-spacing: 
   transition: transform .2s ease, box-shadow .2s ease;
 }
 .form-submit:hover { background: var(--grad-brand); transform: translateY(-2px); box-shadow: 0 24px 50px rgba(34, 40, 117, .40); }
+.form-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: var(--shadow-brand); }
 .form-submit svg { width: 16px; height: 16px; }
 .form-success {
   display: none;
@@ -2251,6 +2252,11 @@ h1, h2, h3, h4 { margin: 0; font-family: "DM Sans", sans-serif; letter-spacing: 
   margin-top: 18px;
 }
 .form-success.is-visible { display: block; }
+.form-success.is-error {
+  background: #fdecec;
+  color: #a12626;
+  border-color: #f3bcbc;
+}
 
 /* ==========================================================================
    CONTACTO

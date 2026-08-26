@@ -57,7 +57,9 @@
       <p>Wir analysieren jeden Fall individuell und senden Ihnen ein verbindliches, detailliertes Angebot ohne Überraschungen. Sie können uns auch direkt unter <a href="tel:+34670341997"><strong>+34 670 341 997</strong></a> anrufen oder uns per <a href="https://wa.me/34670341997" target="_blank" rel="noopener">WhatsApp</a> kontaktieren.</p>
     </div>
 
-    <form id="budgetForm" class="budget-form" novalidate>
+    <form id="budgetForm" class="budget-form" novalidate action="/.netlify/functions/send-contact" method="POST">
+      <input type="hidden" name="_subject" value="Neue Angebotsanfrage — Web (DE)">
+      <input type="text" name="_gotcha" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
       <div class="form-row">
         <div class="form-field">
           <label for="nombre">Name *</label>

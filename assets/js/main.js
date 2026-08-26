@@ -211,21 +211,67 @@
     reveals.forEach(el => el.classList.add('is-visible'));
   }
 
-  // Formulario de presupuesto — validación + mensaje de éxito
-  const form = document.getElementById('budgetForm');
-  if (form) {
-    form.addEventListener('submit', (e) => {
+  // Formularios de presupuesto/contacto — envío vía Formspree
+  const FORM_MESSAGES = {
+    es: {
+      success: '¡Gracias! Hemos recibido tu solicitud. Te contactaremos lo antes posible.',
+      error: 'No se ha podido enviar el formulario. Prueba de nuevo o escríbenos a limpiezas.luzdeluna@gmail.com.',
+    },
+    en: {
+      success: 'Thank you! We’ve received your request and will get back to you shortly.',
+      error: 'Something went wrong sending the form. Please try again or email limpiezas.luzdeluna@gmail.com.',
+    },
+    fr: {
+      success: 'Merci ! Votre demande a bien été reçue. Nous vous contacterons rapidement.',
+      error: 'L’envoi du formulaire a échoué. Réessayez ou écrivez-nous à limpiezas.luzdeluna@gmail.com.',
+    },
+    de: {
+      success: 'Vielen Dank! Ihre Anfrage ist eingegangen. Wir melden uns in Kürze bei Ihnen.',
+      error: 'Das Formular konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder schreiben Sie an limpiezas.luzdeluna@gmail.com.',
+    },
+    ru: {
+      success: 'Спасибо! Ваша заявка получена. Мы свяжемся с вами в ближайшее время.',
+      error: 'Не удалось отправить форму. Попробуйте ещё раз или напишите на limpiezas.luzdeluna@gmail.com.',
+    },
+  };
+  const pageLang = (document.documentElement.lang || 'es').slice(0, 2);
+  const messages = FORM_MESSAGES[pageLang] || FORM_MESSAGES.es;
+
+  document.querySelectorAll('#budgetForm, #contactForm').forEach((form) => {
+    const success = form.querySelector('.form-success');
+    const submitBtn = form.querySelector('.form-submit');
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const success = form.querySelector('.form-success');
       if (!form.checkValidity()) {
         form.reportValidity();
         return;
       }
-      if (success) {
-        success.classList.add('is-visible');
-        success.textContent = '¡Gracias! Hemos recibido tu solicitud. Te contactaremos lo antes posible.';
+      if (!form.action) return;
+
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        const payload = Object.fromEntries(new FormData(form).entries());
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) throw new Error('Contact form request failed');
+        if (success) {
+          success.classList.remove('is-error');
+          success.classList.add('is-visible');
+          success.textContent = messages.success;
+        }
+        form.reset();
+      } catch (err) {
+        if (success) {
+          success.classList.add('is-visible', 'is-error');
+          success.textContent = messages.error;
+        }
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
-      form.reset();
     });
-  }
+  });
 })();

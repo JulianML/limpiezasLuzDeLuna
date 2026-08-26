@@ -57,7 +57,9 @@
       <p>We study every case individually and send you a fixed, detailed quote with no surprises. You can also call us directly at <a href="tel:+34670341997"><strong>+34 670 341 997</strong></a> or message us on <a href="https://wa.me/34670341997" target="_blank" rel="noopener">WhatsApp</a>.</p>
     </div>
 
-    <form id="budgetForm" class="budget-form" novalidate>
+    <form id="budgetForm" class="budget-form" novalidate action="/.netlify/functions/send-contact" method="POST">
+      <input type="hidden" name="_subject" value="New quote request — Web (EN)">
+      <input type="text" name="_gotcha" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
       <div class="form-row">
         <div class="form-field">
           <label for="nombre">Name *</label>
