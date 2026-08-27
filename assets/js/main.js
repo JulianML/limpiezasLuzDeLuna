@@ -211,7 +211,11 @@
     reveals.forEach(el => el.classList.add('is-visible'));
   }
 
-  // Formularios de presupuesto/contacto — envío vía Formspree
+  // Formularios de presupuesto/contacto — envío a la función send-contact
+  // Pega aquí tu Site Key de Cloudflare Turnstile (dashboard.cloudflare.com > Turnstile)
+  // para activar el CAPTCHA invisible. Mientras esté vacío, no se carga nada.
+  const TURNSTILE_SITE_KEY = '0x4AAAAAAEd-vMT9JIcWNji3';
+
   const FORM_MESSAGES = {
     es: {
       success: '¡Gracias! Hemos recibido tu solicitud. Te contactaremos lo antes posible.',
@@ -237,9 +241,28 @@
   const pageLang = (document.documentElement.lang || 'es').slice(0, 2);
   const messages = FORM_MESSAGES[pageLang] || FORM_MESSAGES.es;
 
+  if (TURNSTILE_SITE_KEY) {
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+
+  const formLoadTimes = new WeakMap();
+
   document.querySelectorAll('#budgetForm, #contactForm').forEach((form) => {
+    formLoadTimes.set(form, Date.now());
+
     const success = form.querySelector('.form-success');
     const submitBtn = form.querySelector('.form-submit');
+
+    if (TURNSTILE_SITE_KEY && submitBtn) {
+      const widget = document.createElement('div');
+      widget.className = 'cf-turnstile';
+      widget.setAttribute('data-sitekey', TURNSTILE_SITE_KEY);
+      submitBtn.insertAdjacentElement('beforebegin', widget);
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -252,6 +275,7 @@
       if (submitBtn) submitBtn.disabled = true;
       try {
         const payload = Object.fromEntries(new FormData(form).entries());
+        payload._elapsed = String(Date.now() - (formLoadTimes.get(form) || Date.now()));
         const response = await fetch(form.action, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
