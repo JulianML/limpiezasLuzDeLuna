@@ -651,6 +651,19 @@
     bodyPreview.innerHTML = markdownToHtml(md);
   }
 
+  // Inline markdown seguro: escapa primero y luego admite **negrita** y
+  // [texto](url) solo con rutas internas ("/...") o https://. Los enlaces
+  // externos se abren en pestaña nueva.
+  function inlineMd(s) {
+    let h = escapeHtml(s);
+    h = h.replace(/\[([^\]]+)\]\(((?:\/|https:\/\/)[^\s)]*)\)/g, (m, t, u) => {
+      const ext = /^https:\/\//.test(u) && !/^https:\/\/(www\.)?limpiezasluzdeluna\.es/.test(u);
+      return `<a href="${u}"${ext ? ' target="_blank" rel="noopener"' : ""}>${t}</a>`;
+    });
+    h = h.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    return h;
+  }
+
   function markdownToHtml(text) {
     const lines = String(text || "").split(/\r?\n/);
     const out = [];
@@ -671,11 +684,11 @@
       if (li) {
         if (inP) { out.push("</p>"); inP = false; }
         if (!inUl) { out.push("<ul>"); inUl = true; }
-        out.push(`<li>${escapeHtml(li[1])}</li>`);
+        out.push(`<li>${inlineMd(li[1])}</li>`);
         continue;
       }
       if (!inP) { out.push("<p>"); inP = true; } else { out.push(" "); }
-      out.push(escapeHtml(line));
+      out.push(inlineMd(line));
     }
     close();
     return out.join("\n");

@@ -1,0 +1,40 @@
+{
+  "slug": "calidad-productos-limpieza-cristales",
+  "categorySlug": "soluciones-hogar",
+  "image": "assets/img/servicio-agua-pura.jpg",
+  "published": 1,
+  "tags": [
+    { "slug": "productos", "i18n": { "es": "Productos", "en": "Products", "fr": "Produits", "de": "Produkte", "ru": "Продукты" } },
+    { "slug": "agua-osmotizada", "i18n": { "es": "Agua osmotizada", "en": "Reverse-Osmosis Water", "fr": "Eau osmosée", "de": "Umkehrosmosewasser", "ru": "Осмотическая вода" } },
+    { "slug": "mantenimiento", "i18n": { "es": "Mantenimiento", "en": "Maintenance", "fr": "Entretien", "de": "Wartung", "ru": "Обслуживание" } },
+    { "slug": "hogar", "i18n": { "es": "Hogar", "en": "Home", "fr": "Maison", "de": "Zuhause", "ru": "Дом" } },
+    { "slug": "costa-blanca", "i18n": { "es": "Costa Blanca", "en": "Costa Blanca", "fr": "Costa Blanca", "de": "Costa Blanca", "ru": "Коста-Бланка" } }
+  ],
+  "locales": {
+    "es": {
+      "title": "Calidad de los productos para limpiar cristales: cuánto tiempo duran limpios tus ventanas",
+      "excerpt": "La calidad del agua, los detergentes y las herramientas decide cuánto tiempo siguen limpios los cristales de tu casa. Te lo explicamos con nuestra experiencia limpiando cristales en toda la Marina Baixa y en Calpe.",
+      "dateLabel": "20 de noviembre de 2026"
+    },
+    "en": {
+      "title": "Window cleaning product quality: how long your windows really stay clean",
+      "excerpt": "Water quality, detergents and tools decide how long the windows in your home stay clean. We explain it from our experience cleaning windows across the Marina Baixa and in Calpe.",
+      "dateLabel": "November 20, 2026"
+    },
+    "fr": {
+      "title": "Qualité des produits pour nettoyer les vitres : combien de temps vos fenêtres restent propres",
+      "excerpt": "La qualité de l'eau, des détergents et des outils détermine combien de temps les vitres de votre maison restent propres. Nous vous l'expliquons grâce à notre expérience dans toute la Marina Baixa et à Calpe.",
+      "dateLabel": "20 novembre 2026"
+    },
+    "de": {
+      "title": "Qualität der Reinigungsprodukte für Fenster: Wie lange Ihre Scheiben wirklich sauber bleiben",
+      "excerpt": "Wasserqualität, Reinigungsmittel und Werkzeuge entscheiden, wie lange die Fenster Ihres Hauses sauber bleiben. Wir erklären es aus unserer Erfahrung in der gesamten Marina Baixa und in Calpe.",
+      "dateLabel": "20. November 2026"
+    },
+    "ru": {
+      "title": "Качество средств для мойки окон: как долго ваши стёкла остаются чистыми",
+      "excerpt": "Качество воды, моющих средств и инструментов определяет, как долго окна вашего дома остаются чистыми. Рассказываем на основе нашего опыта по всей Марина-Байше и в Кальпе.",
+      "dateLabel": "20 ноября 2026 г."
+    }
+  }
+}
